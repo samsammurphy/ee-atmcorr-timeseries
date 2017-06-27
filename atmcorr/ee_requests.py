@@ -30,7 +30,7 @@ class CloudRemover:
     cloudy = cloud.distance(ee.Kernel.euclidean(120, "meters")).gte(0).unmask(0, False)
     cloudFree = image.updateMask(cloudy.eq(0))
     
-    return cloudFree
+    return image#cloudFree
   
   def landsat(image):
     """
@@ -57,26 +57,26 @@ class RadianceFromTOA:
 
     # solar irradiances
     ESUNs = ee.Image([
-      ee.Number(image.get('SOLAR_IRRADIANCE_B1'))#,
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B2')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B3')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B4')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B5')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B6')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B7')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B8')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B8A')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B9')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B10')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B11')),
-      # ee.Number(image.get('SOLAR_IRRADIANCE_B12'))
+      ee.Number(image.get('SOLAR_IRRADIANCE_B1')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B2')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B3')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B4')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B5')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B6')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B7')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B8')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B8A')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B9')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B10')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B11')),
+      ee.Number(image.get('SOLAR_IRRADIANCE_B12'))
     ])
 
     # wavebands
-    bands = ee.List(['B1'])#,'B2','B3','B4','B5','B6','B7','B8','B8A','B9','B10','B11','B12'])
+    bands = ee.List(['B1','B2','B3','B4','B5','B6','B7','B8','B8A','B9','B10','B11','B12'])
 
     # solar zenith (radians)
-    theta = ee.Number(image.get('MEAN_SOLAR_ZENITH_ANGLE')).multiply(57.295779513)
+    theta = ee.Number(image.get('MEAN_SOLAR_ZENITH_ANGLE')).multiply(0.017453293)
 
     # circular math
     pi = ee.Number(3.14159265359)
@@ -175,14 +175,15 @@ class TimeSeries:
     AtmcorrInput.image = image
     atmcorr_inputs = AtmcorrInput.get()
     
-    # # export to new feature collection
-    # properties = {
-    #   'imgID':image.get('system:index'),
-    #   'mean_averages':mean_averages,
-    #   'atmcorr_inputs':atmcorr_inputs      
-    # }  
+    # export to new feature collection
+    properties = {
+      'imgID':image.get('system:index'),
+      'timeStamp':ee.Number(image.get('system:time_start')).divide(1000),
+      'mean_averages':mean_averages,
+      'atmcorr_inputs':atmcorr_inputs      
+    }  
 
-    return ee.Feature(TimeSeries.geom, atmcorr_inputs)
+    return ee.Feature(TimeSeries.geom, properties)
 
 def request_cloudFreeRadiance(ic, geom):
   """
@@ -196,27 +197,3 @@ def request_cloudFreeRadiance(ic, geom):
   TimeSeries.radianceFromTOA = RadianceFromTOA.sentinel2 # method for radiance conversion
   
   return ic.map(TimeSeries.extractor)
-
-
-
-# # debugging
-# # Location and time
-# geom = ee.Geometry.Point(-106.597016, 35.196966)
-# date = ee.Date('2016-10-01')# will try to find first image from this date
-
-# # Sentinel 2 image
-# image = ee.Image(
-#   ee.ImageCollection('COPERNICUS/S2')
-#     .filterBounds(geom)
-#     .filterDate(date,date.advance(3,'month'))
-#     .sort('system:time_start')
-#     .first()
-#   )
-
-# cloudFree = CloudRemover.sentinel2(image)
-
-# rad = RadianceFromTOA.sentinel2(cloudFree)
-
-# mean_averages = rad.reduceRegion(\
-#       reducer = ee.Reducer.mean(),\
-#       geometry = geom)
