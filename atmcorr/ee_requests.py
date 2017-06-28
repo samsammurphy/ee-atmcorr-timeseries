@@ -14,8 +14,6 @@ Returns a feature collection which could be input into, for exampled:
 import ee
 from atmospheric import Atmospheric
 
-ee.Initialize()
-
 class CloudRemover:
   """
   Collection of cloud removal methods for different satellite missions
@@ -26,11 +24,20 @@ class CloudRemover:
     Removes cloud pixels from Sentinel 2 image using QA60 band
     """
     
-    cloud = image.select('QA60').gt(0)
-    cloudy = cloud.distance(ee.Kernel.euclidean(120, "meters")).gte(0).unmask(0, False)
-    cloudFree = image.updateMask(cloudy.eq(0))
+    # cloud removal based on quality assurance/assistance band
+    QA60 = image.select('QA60')
+    # a few of options here
+    clear = QA60.eq(0)
+    denseCloud = QA60.subtract(0.10239999741315842).abs().lt(0.00001)
+    cirrusCloud = QA60.subtract(0.20479999482631683).abs().lt(0.00001)
     
-    return image#cloudFree
+    # (option) 'cloud-free' = not dense cloud
+    # cloudFree = image.updateMask(denseCloud.eq(0))
+    
+    # cloud free = clear
+    cloudFree = image.updateMask(clear)
+    
+    return cloudFree
   
   def landsat(image):
     """
@@ -162,20 +169,21 @@ class TimeSeries:
     # image date
     TimeSeries.date = ee.Date(image.get('system:time_start'))
     
-    # remove clouds
-    cloudFree = TimeSeries.cloudRemover(image)
+    # remove clouds?
+    if TimeSeries.applyCloudMask:
+      image = TimeSeries.cloudRemover(image)
 
-    # convert to radiance
-    cloudFreeRadiance = TimeSeries.radianceFromTOA(cloudFree)
+    # radiance at-sensor
+    radiance = TimeSeries.radianceFromTOA(image)
 
-    # calculate mean averages
-    mean_averages = TimeSeries.meanReduce(cloudFreeRadiance, TimeSeries.geom)
+    # mean average radiance
+    mean_averages = TimeSeries.meanReduce(radiance, TimeSeries.geom)
 
     # atmospheric correction inputs
     AtmcorrInput.image = image
     atmcorr_inputs = AtmcorrInput.get()
     
-    # export to new feature collection
+    # export to feature collection
     properties = {
       'imgID':image.get('system:index'),
       'timeStamp':ee.Number(image.get('system:time_start')).divide(1000),
@@ -185,15 +193,20 @@ class TimeSeries:
 
     return ee.Feature(TimeSeries.geom, properties)
 
-def request_cloudFreeRadiance(ic, geom):
+def request_meanRadiance(ic, geom, cloudMask = False):
   """
-  Sets the user-defined geometry to the TimeSeries class, and extracts 
-  mean radiance values inside that geometry for all images in a collection
+  Creates Earth Engine invocation for mean radiance values within a fixed
+  geometry over an image collection (optionally applies cloud mask first)
   """
   
   # initialize
   TimeSeries.geom = geom                                 # geometry for pixel averages
+  TimeSeries.applyCloudMask = cloudMask                  # apply cloud mask?
+  #mission specifics
+  ########################################################
   TimeSeries.cloudRemover = CloudRemover.sentinel2       # method for cloud removal
-  TimeSeries.radianceFromTOA = RadianceFromTOA.sentinel2 # method for radiance conversion
+  ########################################################
+  TimeSeries.radianceFromTOA = RadianceFromTOA.sentinel2 # radiance conversion method
+  ########################################################
   
   return ic.map(TimeSeries.extractor)
