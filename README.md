@@ -25,11 +25,16 @@ pip install google-api-python-client
 pip install earthengine-api 
 ```
 
-## Usage
-
 Authenticate the Earth Engine API.
 
 `earthengine authenticate`
 
-see the Jupyter Notebook for example usage
+## Usage
 
+clone this repository
+
+`git clone https://github.com/samsammurphy/ee-atmcorr-timeseries.git`
+
+run the jupyter notebook
+
+`jupyter-notebook ./ee-atmcorr-timeseries/jupyter_notebooks/ee-atmcorr-timeseries.ipynb`
