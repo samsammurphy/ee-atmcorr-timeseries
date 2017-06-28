@@ -8,6 +8,7 @@ and interpolating the look up tables used by the 6S emulator
 """
 
 import os
+import sys
 import glob
 import pickle
 import urllib.request
@@ -24,98 +25,76 @@ class handler:
   and interpolating the look up tables used by the 6S emulator 
   """
   
-  def __init__(self, imageCollectionID=False, satelliteMission=False, iLUT_path=False):
-    
-    self.imageCollectionID = imageCollectionID
-    self.satelliteMission = satelliteMission
-    self.iLUT_path = iLUT_path
+  def __init__(self, mission=False, path=False):
+   
+    self.path = path
+    self.mission = mission
+    self.supportedMissions = ['Sentinel2']
 
+    # mission specific
     ##############################################################################
-    #Earth Engine mission to Py6S sensor name
-    self.py6S_sensor = 'S2A_MSI'#mission_specifics.py6S_sensor(imageCollectionID, satelliteMission)
+    self.py6S_sensor = 'S2A_MSI'#mission_specifics.py6S_sensor(mission)
     ##############################################################################
-    
-    # default file paths
-    self.bin_path = os.path.dirname(os.path.abspath(__file__))
-    self.base_path = os.path.dirname(self.bin_path)
-    self.files_path = os.path.join(self.base_path,'files')
-    self.LUT_path = os.path.join(self.files_path,'LUTs',self.py6S_sensor,\
-    'Continental','view_zenith_0')
-    if not iLUT_path:
-      self.iLUT_path = os.path.join(self.files_path,'iLUTs',self.py6S_sensor,\
-      'Continental','view_zenith_0')
 
-
-  def get(self):
+  def download_LUTs(self):
     """
-    Loads interpolated look-up tables from local files (if they exist)
-
-    else checks for look-up tables (will try downloading if not
-    found) and interpolates.
+    Downloads the look-up tables for a given satellite mission
     """
     
-    # create iLUTs dictionary
-    self.iLUTs = {}
+    # directory for zip file
+    zip_dir = os.path.join(self.files_path,'LUTs')
+    if not os.path.isdir(zip_dir):
+      os.makedirs(zip_dir)
 
-    # see if iLUTs already exists
-    ilut_files = glob.glob(self.iLUT_path+os.path.sep+'*.ilut')
+    # Sentinel 2 and Landsats URL switch
+    getURL = {
+      'S2A_MSI':"https://www.dropbox.com/s/aq873gil0ph47fm/S2A_MSI.zip?dl=1",
+      'LANDSAT_OLI':'https://www.dropbox.com/s/49ikr48d2qqwkhm/LANDSAT_OLI.zip?dl=1',
+      'LANDSAT_ETM':'https://www.dropbox.com/s/z6vv55cz5tow6tj/LANDSAT_ETM.zip?dl=1',
+      'LANDSAT_TM':'https://www.dropbox.com/s/uyiab5r9kl50m2f/LANDSAT_TM.zip?dl=1',
+      'LANDSAT_TM':'https://www.dropbox.com/s/uyiab5r9kl50m2f/LANDSAT_TM.zip?dl=1'
+    }
+
+    # download LUTs data
+    print('downloading look up table (.lut) files..')
+    url = getURL[self.py6S_sensor]
+    u = urllib.request.urlopen(url)
+    data = u.read()
+    u.close()
     
-    if ilut_files:
-      
-      try:
-        
-        for f in ilut_files:
-          
-          bandName_py6s = os.path.basename(f).split('.')[0][-2:]
-          self.iLUTs[bandName_py6s] = pickle.load(open(f,'rb'))
+    # save to zip file
+    zip_filepath = os.path.join(zip_dir,self.py6S_sensor+'.zip')
+    with open(zip_filepath, "wb") as f :
+        f.write(data)
 
-        # if iLUTs exists and load properly, then we're good
-        return
+    # extract LUTs directory
+    with zipfile.ZipFile(zip_filepath,"r") as zip_ref:
+        zip_ref.extractall(zip_dir)
 
-      except:
-        print('loading error for (.ilut) files in:\n'+self.iLUT_path)      
-    
-    else:
-      print('Interpolated look-up tables not found in:\n{}'.format(self.iLUT_path))
-      print('Will search for (un-interpolated) look-up tables in:\n{}'.format(self.LUT_path))
-    
-    return
-    
-    # else, see if LUTs exists
-    # yes, interpolate and return
+    # delete zip file
+    os.remove(zip_filepath)
 
-    # else, 
-    # download LUTS
-    # interpolate  and return 
-
-    # else,
-    # warning!
-    # must define one of following: imageCollectionID, satellite_mission, iLUT_path
-
+    print('downloaded successful')
+  
+  
   def interpolate_LUTs(self):
     """
-    interpolate look up tables
+    interpolates look up table files (.lut)
     """
-    
+
     filepaths = sorted(glob.glob(self.LUT_path+os.path.sep+'*.lut'))
-
     if filepaths:
-      
-      print('running n-dimensional interpolation may take a few minutes...')
-      
+      print('running n-dimensional interpolation may take a few minutes...(only need to do this once per mission).')
       try:
-
         for fpath in filepaths:
-          
           fname = os.path.basename(fpath)
           fid, ext = os.path.splitext(fname)
-          ilut_filepath = os.path.join(self.iLUT_path,fid+'.ilut')
-          
+          ilut_filepath = os.path.join(self.path,fid+'.ilut')
           if os.path.isfile(ilut_filepath):
             print('iLUT file already exists (skipping interpolation): {}'.format(fname))
           else:
             print('Interpolating: '+fname)
-
+            
             # load look up table
             LUT = pickle.load(open(fpath,"rb"))
 
@@ -144,55 +123,104 @@ class handler:
 
     else:
       
-      print('LUTs directory: ',self.LUT_path)
-      print('LUT files (.lut) not found in LUTs directory, try downloading?')
+      print('look up tables files (.lut) not found in LUTs directory:\n{}'.format(self.LUT_path))
+
+  def load_iluts_from_path(self):
+    """
+    looks for .ilut files in self.path and loads them into self.iLUTs
+    """
+    
+    print('loading interpolated look up tables (.ilut) from :...\n{}'.format(self.path))
+
+    ilut_files = glob.glob(self.path+os.path.sep+'*.ilut')
+    if ilut_files:
+      try:
+        for f in ilut_files:
+          bandName_py6s = os.path.basename(f).split('.')[0][-2:]
+          self.iLUTs[bandName_py6s] = pickle.load(open(f,'rb'))
+        print('success')
+        return
+      except:
+        print('error: loading file: \n'+f)      
+    else:
+      print('error: interpolated look-up table files (.ilut) not found')
+
+  def load_iluts_from_mission(self):
+    """
+    downloads look-up tables for a given mission and interpolates them.
+    """
+    
+    # default file paths
+    self.bin_path = os.path.dirname(os.path.abspath(__file__))
+    self.base_path = os.path.dirname(self.bin_path)
+    self.files_path = os.path.join(self.base_path,'files')
+    
+    self.LUT_path = os.path.join(self.files_path,'LUTs',self.py6S_sensor,\
+      'Continental','view_zenith_0')
+    self.path = os.path.join(self.files_path,'iLUTs',self.py6S_sensor,\
+     'Continental','view_zenith_0')
+
+    # create default file paths
+    if not os.path.isdir(self.files_path):
+      os.makedirs(self.files_path)
+    if not os.path.isdir(self.LUT_path):
+      os.makedirs(self.LUT_path)
+    if not os.path.isdir(self.path):
+        os.makedirs(self.path)
+   
+    # download the files
+    self.download_LUTs()
+
+    # interpolate them
+    self.interpolate_LUTs()
+
+    # load files
+    self.load_iluts_from_path()
+
+  def get(self):
+    """
+    
+    Loads interpolated look-up files in one of two ways:
+
+    1) if self.path is defined:
+
+       - load all .ilut files in that path
+    
+    2) if self.mission is defined:
+
+       - download lut files (i.e. look-up tables)
+       - interpolate lut files (creating ilut files; note new 'i' prefix)
+       - load the ilut files
+
+    """
+    
+    # create iLUTs dictionary
+    self.iLUTs = {}
+
+    # try loading from path (if defined)
+    if self.path:
+      self.load_iluts_from_path() 
       
+      # if iluts loaded correctly then we're good
+      if self.iLUTs:
+        return
 
-  def download_LUTs(self):
-    
-    # directory for zip file
-    zip_dir = os.path.join(self.files_path,'LUTs')
-    if not os.path.isdir(zip_dir):
-      os.makedirs(zip_dir)
+    # otherwise, try downloading and interpolating
+    if self.mission:
+      self.load_iluts_from_mission() # mission not supported: options include ['Sentinel2']
 
-    # URLs for Sentinel 2 and Landsats (dl=1 is important)
-    getURL = {
-      'S2A_MSI':"https://www.dropbox.com/s/aq873gil0ph47fm/S2A_MSI.zip?dl=1",
-      'LANDSAT_OLI':'https://www.dropbox.com/s/49ikr48d2qqwkhm/LANDSAT_OLI.zip?dl=1',
-      'LANDSAT_ETM':'https://www.dropbox.com/s/z6vv55cz5tow6tj/LANDSAT_ETM.zip?dl=1',
-      'LANDSAT_TM':'https://www.dropbox.com/s/uyiab5r9kl50m2f/LANDSAT_TM.zip?dl=1',
-      'LANDSAT_TM':'https://www.dropbox.com/s/uyiab5r9kl50m2f/LANDSAT_TM.zip?dl=1'
-    }
+      if not self.iLUTs:
+        print('fatal error: interpolated look up tables have not been loaded successfully!')
+        sys.exit(1)
 
-    # download LUTs data
-    print('Downloading look up table (LUT) zip file..')
-    url = getURL[self.py6S_sensor]
-    u = urllib.request.urlopen(url)
-    data = u.read()
-    u.close()
-    
-    # save to zip file
-    zip_filepath = os.path.join(zip_dir,self.py6S_sensor+'.zip')
-    with open(zip_filepath, "wb") as f :
-        f.write(data)
-
-    # extract LUTs directory
-    print('Extracting zip file..')
-    with zipfile.ZipFile(zip_filepath,"r") as zip_ref:
-        zip_ref.extractall(zip_dir)
-
-    # delete zip file
-    os.remove(zip_filepath)
-
-    print('Done: LUT files available locally')
+    # check path or mission were defined
+    if not self.path and not self.mission:
+      print('fatal error: must define self.path or self.mission for iLUT.handler() instance')
+      sys.exit(1)
 
 
-
-
-
-
-# debugging
-# iLUTs = handler()
-# iLUTs.iLUT_path = '/home/sam'
-# iLUTs.get()  # must define one of following: imageCollectionID, satellite_mission, iLUT_path
+# # debugging
+# iLUTs = handler() 
+# iLUTs.mission = 'Sentinel2'
+# iLUTs.get()
 # print(iLUTs.iLUTs)
