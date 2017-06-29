@@ -25,6 +25,7 @@ def visPlot(timeSeries):
   plt.plot(timeSeries['dates'], timeSeries[vizBands[1]], 'green')
   plt.plot(timeSeries['dates'], timeSeries[vizBands[2]], 'red')
   plt.title('RGB')
+  plt.ylim([0,1])
   plt.show()
 
 def nirPlot(timeSeries):
@@ -58,6 +59,7 @@ def nirPlot(timeSeries):
     plt.plot(timeSeries['dates'], timeSeries[band], config['colors'][i], label=config['labels'][i])
   
   plt.title('Near Infrared')
+  plt.ylim([0,1])
   plt.legend()
   plt.show()
 
@@ -92,6 +94,7 @@ def swirPlot(timeSeries):
     plt.plot(timeSeries['dates'], timeSeries[band], config['colors'][i], label=config['labels'][i])
   
   plt.title('Short-wave Infrared')
+  plt.ylim([0,1])
   plt.legend()
   plt.show()
 
@@ -123,8 +126,11 @@ def atmPlot(timeSeries):
     plt.plot(timeSeries['dates'], timeSeries[band], config['colors'][i], label=config['labels'][i])
     
   plt.title('Atmospheric')
+  plt.ylim([0,1])
   plt.legend()
   plt.show()
+
+  return 1
 
 def plot_timeseries(timeSeries, plotType):
   
