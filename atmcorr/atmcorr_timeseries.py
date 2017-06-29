@@ -9,7 +9,7 @@ correction)
 """
 
 import math
-# import mission_specifics (i.e. to handle satellite mission other than Sentinel 2)
+import mission_specifics
 
 def atmcorr(radiance, perihelion, day_of_year):
   """
@@ -33,29 +33,24 @@ def atmcorr(radiance, perihelion, day_of_year):
   return SR
 
 
-def surface_reflectance_timeseries(cloudFreeRadiance, iLUTs):
+def surface_reflectance_timeseries(meanRadiance, iLUTs, mission):
   """
-  Atmospherically corrects mean, cloud-free pixel radiances
+  Atmospherically corrects mean (cloud-free) pixel radiances
   returning a time series of surface reflectance values.
   """
 
-  feature_collection = cloudFreeRadiance['features']
+  feature_collection = meanRadiance['features']
   
   # band names 
-  # mission specific (Sentinel 2 hardcoded)
-  #############################################################################
-  ee_bandnames = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9','B10', 'B11', 'B12']
-  py6s_bandnames = ['01','02','03','04','05','06','07','08','09','10','11','12','13']
-  #############################################################################
-  # TODO ee_bandnames = mission_specifics.ee_bandnames(mission)
-  # TODO py6s_bandnames = mission_specifics.py6s_bandnames(mission)
+  ee_bandnames = mission_specifics.ee_bandnames(mission)
+  py6s_bandnames = mission_specifics.py6s_bandnames(mission)
 
-  # surface reflectance output
-  # (i.e. time series lists, stored in a dictionary)
-  timeSeries = {'timeStamp':[]}
+  # time series output variable
+  timeSeries = {'timeStamp':[], 'mission':mission}
   for ee_bandname in ee_bandnames:
     timeSeries[ee_bandname] = []
   
+  # atmospherically correct each scene in collection
   for feature in feature_collection:
     
     # time stamp
