@@ -13,6 +13,7 @@ Returns a feature collection which could be input into, for exampled:
 
 import ee
 from atmospheric import Atmospheric
+import mission_specifics
 
 class CloudRemover:
   """
@@ -42,75 +43,41 @@ class CloudRemover:
   def landsat(image):
     """
     Removes cloud pixels from Landsat image using FMASK band
+
+    NB. calculated on the fly, might be slow
     """
     
-    # read fmask band
+    fmask = image.select('fmask')
+    # 0 = clear
+    # 1 = water
+    # 2 = shadow
+    # 3 = snow
+    # 4 = cloud
     
-    return
+    # cloud and shadow
+    cloud = fmask.eq(4)
+    shadow = fmask.eq(2)
 
-class RadianceFromTOA:
-  """
-  Collection of methods to convert top-of-atmosphere (TOA) reflectance
-  to at-sensor radiance
-  """
+    # cloud and shadow remover
+    mask = cloud.Or(shadow).eq(0)
+    
+    return image.updateMask(mask)
   
-  def sentinel2(image):
-    """
-    converts Sentinel2 TOA to at-sensor radiance
-    """
+  def method(mission):
+    
+    switch = {
+      'Sentinel2':CloudRemover.sentinel2,
+      'Landsat8':CloudRemover.landsat,
+      'Landsat7':CloudRemover.landsat,
+      'Landsat5':CloudRemover.landsat,
+      'Landsat4':CloudRemover.landsat
+    }
 
-    # Top of atmosphere reflectance
-    toa = image.divide(10000)
-
-    # solar irradiances
-    ESUNs = ee.Image([
-      ee.Number(image.get('SOLAR_IRRADIANCE_B1')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B2')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B3')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B4')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B5')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B6')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B7')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B8')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B8A')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B9')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B10')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B11')),
-      ee.Number(image.get('SOLAR_IRRADIANCE_B12'))
-    ])
-
-    # wavebands
-    bands = ee.List(['B1','B2','B3','B4','B5','B6','B7','B8','B8A','B9','B10','B11','B12'])
-
-    # solar zenith (radians)
-    theta = ee.Number(image.get('MEAN_SOLAR_ZENITH_ANGLE')).multiply(0.017453293)
-
-    # circular math
-    pi = ee.Number(3.14159265359)
-
-    # Earth-Sun distance squared (AU)
-    day_of_year = 1
-    d = ee.Number(day_of_year).subtract(4).multiply(0.017202).cos().multiply(-0.01672).add(1)
-    d_squared = d.multiply(d)
-
-    # radiace at-sensor
-    rad = toa.select(bands).multiply(ESUNs).multiply(theta.cos()).divide(pi).divide(d_squared)
-
-    return rad
-  
-  def landsat(image):
-    """
-    converts Landsat TOA to at-sensor radiance
-    """
-
-    # run check that this is TOA_FMASK
-
-    return image
-
+    return switch[mission]
 
 class AtmcorrInput:
   """
-  Grabs inputs that are required for atmospheric correction using the 6S emulator
+  Grabs the inputs required for atmospheric correction with 6S emulator
   """
 
   # global elevation (kilometers)
@@ -124,15 +91,12 @@ class AtmcorrInput:
         )
 
     return ee.Dictionary({
-      # mission specific!!
-      ###########################################################
-      'solar_z':AtmcorrInput.image.get('MEAN_SOLAR_ZENITH_ANGLE'),
-      ###########################################################
+      'solar_z':mission_specifics.solar_z(TimeSeries.image, TimeSeries.mission),
       'h2o':Atmospheric.water(TimeSeries.geom,TimeSeries.date),
       'o3':Atmospheric.ozone(TimeSeries.geom,TimeSeries.date),
       'aot':Atmospheric.aerosol(TimeSeries.geom,TimeSeries.date),
       'alt':altitude.get('be75'),
-      'doy':TimeSeries.doy_from_date(TimeSeries.date)
+      'doy':TimeSeries.day_of_year
       })
   
 
@@ -145,14 +109,6 @@ class TimeSeries:
   calculate surface reflectance from at-sensor radiance.
   """
 
-  def doy_from_date(date):
-    """
-    day-of-year from Earth Engine date
-    """
-    jan01 = ee.Date.fromYMD(date.get('year'),1,1)
-    doy = ee.Number(date.difference(jan01,'day')).add(1)
-    return doy
-
   def meanReduce(image, geom):
     """
     Calculates mean average pixel values in a geometry
@@ -164,28 +120,59 @@ class TimeSeries:
     
     return mean_averages
    
+  def radianceFromTOA():
+    """
+    calculate at-sensor radiance from top-of-atmosphere (TOA) reflectance
+    """
+
+    # top of atmosphere reflectance
+    toa = mission_specifics.TOA(TimeSeries.image, TimeSeries.mission)
+
+    # solar irradiances
+    ESUNs = mission_specifics.ESUNs(TimeSeries.image, TimeSeries.mission)
+
+    # wavebands
+    bands = mission_specifics.ee_bandnames(TimeSeries.mission)
+
+    # solar zenith (radians)
+    theta = mission_specifics.solar_z(TimeSeries.image, TimeSeries.mission).multiply(0.017453293)
+
+    # circular math
+    pi = ee.Number(3.14159265359)
+
+    # Earth-Sun distance squared (AU)
+    d = ee.Number(TimeSeries.day_of_year).subtract(4).multiply(0.017202).cos().multiply(-0.01672).add(1)
+    d_squared = d.multiply(d)
+
+    # radiace at-sensor
+    rad = toa.select(ee.List(bands)).multiply(ESUNs).multiply(theta.cos()).divide(pi).divide(d_squared)
+
+    return rad
+  
   def extractor(image):
     
-    # image date
+    # update TimeSeries class
+    TimeSeries.image = image
     TimeSeries.date = ee.Date(image.get('system:time_start'))
+    jan01 = ee.Date.fromYMD(TimeSeries.date.get('year'),1,1)
+    TimeSeries.day_of_year = ee.Number(TimeSeries.date.difference(jan01,'day')).add(1)
     
     # remove clouds?
     if TimeSeries.applyCloudMask:
       image = TimeSeries.cloudRemover(image)
 
     # radiance at-sensor
-    radiance = TimeSeries.radianceFromTOA(image)
+    radiance = TimeSeries.radianceFromTOA()
 
     # mean average radiance
     mean_averages = TimeSeries.meanReduce(radiance, TimeSeries.geom)
 
     # atmospheric correction inputs
-    AtmcorrInput.image = image
     atmcorr_inputs = AtmcorrInput.get()
     
     # export to feature collection
     properties = {
-      'imgID':image.get('system:index'),
+      'imageID':image.get('system:index'),
       'timeStamp':ee.Number(image.get('system:time_start')).divide(1000),
       'mean_averages':mean_averages,
       'atmcorr_inputs':atmcorr_inputs      
@@ -193,20 +180,26 @@ class TimeSeries:
 
     return ee.Feature(TimeSeries.geom, properties)
 
-def request_meanRadiance(ic, geom, cloudMask = False):
+def request_meanRadiance(geom, startDate, stopDate, mission, cloudMask = False):
   """
   Creates Earth Engine invocation for mean radiance values within a fixed
   geometry over an image collection (optionally applies cloud mask first)
   """
-  
+
   # initialize
-  TimeSeries.geom = geom                                 # geometry for pixel averages
-  TimeSeries.applyCloudMask = cloudMask                  # apply cloud mask?
-  #mission specifics
-  ########################################################
-  TimeSeries.cloudRemover = CloudRemover.sentinel2       # method for cloud removal
-  ########################################################
-  TimeSeries.radianceFromTOA = RadianceFromTOA.sentinel2 # radiance conversion method
-  ########################################################
-  
+  TimeSeries.geom = geom
+  TimeSeries.startDate = startDate
+  TimeSeries.stopDate = stopDate
+  TimeSeries.mission = mission
+  TimeSeries.applyCloudMask = cloudMask
+
+  # cloud removal method
+  TimeSeries.cloudRemover = CloudRemover.method(mission)       
+
+  # Earth Engine image collection
+  ic = ee.ImageCollection(mission_specifics.eeCollection(mission))\
+    .filterBounds(geom)\
+    .filterDate(startDate, stopDate)\
+    .filter(mission_specifics.sunAngleFilter(mission))
+
   return ic.map(TimeSeries.extractor)
