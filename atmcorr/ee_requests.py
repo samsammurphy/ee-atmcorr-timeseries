@@ -13,67 +13,8 @@ Returns a feature collection which could be input into, for exampled:
 
 import ee
 from atmospheric import Atmospheric
+from cloudRemover import CloudRemover
 import mission_specifics
-
-class CloudRemover:
-  """
-  Collection of cloud removal methods for different satellite missions
-  """
-  
-  def sentinel2(image):
-    """
-    Removes cloud pixels from Sentinel 2 image using QA60 band
-    """
-    
-    # cloud removal based on quality assurance/assistance band
-    QA60 = image.select('QA60')
-    # a few of options here
-    clear = QA60.eq(0)
-    denseCloud = QA60.subtract(0.10239999741315842).abs().lt(0.00001)
-    cirrusCloud = QA60.subtract(0.20479999482631683).abs().lt(0.00001)
-    
-    # (option) 'cloud-free' = not dense cloud
-    # cloudFree = image.updateMask(denseCloud.eq(0))
-    
-    # cloud free = clear
-    cloudFree = image.updateMask(clear)
-    
-    return cloudFree
-  
-  def landsat(image):
-    """
-    Removes cloud pixels from Landsat image using FMASK band
-
-    NB. calculated on the fly, might be slow
-    """
-    
-    fmask = image.select('fmask')
-    # 0 = clear
-    # 1 = water
-    # 2 = shadow
-    # 3 = snow
-    # 4 = cloud
-    
-    # cloud and shadow
-    cloud = fmask.eq(4)
-    shadow = fmask.eq(2)
-
-    # cloud and shadow remover
-    mask = cloud.Or(shadow).eq(0)
-    
-    return image.updateMask(mask)
-  
-  def method(mission):
-    
-    switch = {
-      'Sentinel2':CloudRemover.sentinel2,
-      'Landsat8':CloudRemover.landsat,
-      'Landsat7':CloudRemover.landsat,
-      'Landsat5':CloudRemover.landsat,
-      'Landsat4':CloudRemover.landsat
-    }
-
-    return switch[mission]
 
 class AtmcorrInput:
   """
@@ -99,14 +40,12 @@ class AtmcorrInput:
       'doy':TimeSeries.day_of_year
       })
   
-
-
 class TimeSeries:
   """
-  This class is used to extract cloud-free, average radiance values 
+  This class is used to extract (cloud-free) mean-average radiance values 
   contained within an earth engine geometry for all images in a collection,
   It also gathers the atmospheric correction input variables required to 
-  calculate surface reflectance from at-sensor radiance.
+  get surface reflectance from at-sensor radiance.
   """
 
   def meanReduce(image, geom):
@@ -194,7 +133,8 @@ def request_meanRadiance(geom, startDate, stopDate, mission, cloudMask = False):
   TimeSeries.applyCloudMask = cloudMask
 
   # cloud removal method
-  TimeSeries.cloudRemover = CloudRemover.method(mission)       
+  if cloudMask:
+    TimeSeries.cloudRemover = CloudRemover.method(mission, cloudMask)       
 
   # Earth Engine image collection
   ic = ee.ImageCollection(mission_specifics.eeCollection(mission))\
