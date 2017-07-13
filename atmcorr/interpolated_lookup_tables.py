@@ -88,7 +88,7 @@ class handler:
 
     filepaths = sorted(glob.glob(self.LUT_path+os.path.sep+'*.lut'))
     if filepaths:
-      print('\n...Running n-dimensional interpolation may take a several minutes!...')
+      print('\n...Running n-dimensional interpolation may take a several minutes (only need to do this once)...')
       try:
         for fpath in filepaths:
           fname = os.path.basename(fpath)
