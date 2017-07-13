@@ -117,12 +117,8 @@ class CloudRemover:
     Masks cloud (and shadow) pixels from Landsat images
     """
     
-    toa = img.select(['B1','B2','B3','B4','B5', 'B6','B7','B8','B9','fmask'],\
-        ['aerosol', 'blue', 'green', 'red', 'nir','swir1','swir2', 'pan','cirrus','fmask'])\
-        .set('solar_azimuth',img.get('SUN_AZIMUTH'))\
-        .set('solar_zenith',ee.Number(90).subtract(img.get('SUN_ELEVATION')))
-    
-    fmask = toa.select('fmask')
+    # FMASK
+    fmask = img.select('fmask')
     
     # cloud and shadow
     cloud = fmask.eq(4)
