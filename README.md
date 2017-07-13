@@ -1,6 +1,6 @@
 ## Introduction
 
-Atmospherically corrected, cloud-free, time series of satellite imagery from Google Earth Engine using the [6S emulator](https://github.com/samsammurphy/6S_emulator/edit/master/README.md).
+Atmospherically corrected, cloud-free, time series of satellite imagery from [Google Earth Engine](https://earthengine.google.com/) using the [6S emulator](https://github.com/samsammurphy/6S_emulator/edit/master/README.md).
 
 ## Installation
 
