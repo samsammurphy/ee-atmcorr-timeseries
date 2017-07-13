@@ -78,7 +78,7 @@ class handler:
     # delete zip file
     os.remove(zip_filepath)
 
-    print('downloaded successful')
+    print('download successful')
   
   
   def interpolate_LUTs(self):
