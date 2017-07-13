@@ -37,4 +37,7 @@ clone this repository
 
 run the jupyter notebook
 
-`jupyter-notebook ./ee-atmcorr-timeseries/jupyter_notebooks/ee-atmcorr-timeseries.ipynb`
+```
+cd ee-atmcorr-timeseries/jupyter_notebooks
+jupyter-notebook ee-atmcorr-timeseries.ipynb
+```
