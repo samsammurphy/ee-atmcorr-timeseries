@@ -24,12 +24,22 @@ class handler:
   and interpolating the look up tables used by the 6S emulator 
   """
   
-  def __init__(self, mission=False, path=False):
+  def __init__(self, mission, path=False):
    
-    self.path = path
+    self.userDefinedPath = path
     self.mission = mission
     self.supportedMissions = ['Sentinel2', 'Landsat8', 'Landsat7', 'Landsat5', 'Landsat4']
     
+    # default file paths
+    self.bin_path = os.path.dirname(os.path.abspath(__file__))
+    self.base_path = os.path.dirname(self.bin_path)
+    self.files_path = os.path.join(self.base_path,'files')
+    self.py6S_sensor = mission_specifics.py6S_sensor(self.mission)
+    self.LUT_path = os.path.join(self.files_path,'LUTs',self.py6S_sensor,\
+        'Continental','view_zenith_0')
+    self.iLUT_path = os.path.join(self.files_path,'iLUTs',self.py6S_sensor,\
+        'Continental','view_zenith_0')
+  
   def download_LUTs(self):
     """
     Downloads the look-up tables for a given satellite mission
@@ -78,12 +88,12 @@ class handler:
 
     filepaths = sorted(glob.glob(self.LUT_path+os.path.sep+'*.lut'))
     if filepaths:
-      print('running n-dimensional interpolation may take a several minutes!...')
+      print('\n...Running n-dimensional interpolation may take a several minutes!...')
       try:
         for fpath in filepaths:
           fname = os.path.basename(fpath)
           fid, ext = os.path.splitext(fname)
-          ilut_filepath = os.path.join(self.path,fid+'.ilut')
+          ilut_filepath = os.path.join(self.iLUT_path,fid+'.ilut')
           if os.path.isfile(ilut_filepath):
             print('iLUT file already exists (skipping interpolation): {}'.format(fname))
           else:
@@ -121,12 +131,12 @@ class handler:
 
   def load_iluts_from_path(self):
     """
-    looks for .ilut files in self.path and loads them into self.iLUTs
+    looks for .ilut files in self.iLUT_path and loads them into self.iLUTs
     """
     
     print('Loading interpolated look up tables (.ilut)..')
 
-    ilut_files = glob.glob(self.path+os.path.sep+'*.ilut')
+    ilut_files = glob.glob(self.iLUT_path+os.path.sep+'*.ilut')
     if ilut_files:
       try:
         for f in ilut_files:
@@ -137,7 +147,7 @@ class handler:
       except:
         print('error loading file: \n'+f)      
     else:
-      print('Interpolated look-up table files not found in:\n{}'.format(self.path))
+      print('Interpolated look-up table files not found in:\n{}'.format(self.iLUT_path))
 
   def load_iluts_from_mission(self):
     """
@@ -152,37 +162,9 @@ class handler:
     else:
       # use standardized format internally
       self.mission = self.mission.title()
-    
-    # Py6S sensor name 
-    self.py6S_sensor = mission_specifics.py6S_sensor(self.mission)
-
-    # default file paths
-    self.bin_path = os.path.dirname(os.path.abspath(__file__))
-    self.base_path = os.path.dirname(self.bin_path)
-    self.files_path = os.path.join(self.base_path,'files')
-    self.LUT_path = os.path.join(self.files_path,'LUTs',self.py6S_sensor,\
-      'Continental','view_zenith_0')
-    self.path = os.path.join(self.files_path,'iLUTs',self.py6S_sensor,\
-     'Continental','view_zenith_0')
-
-    # create default file paths
-    if not os.path.isdir(self.files_path):
-      os.makedirs(self.files_path)
-    if not os.path.isdir(self.LUT_path):
-      os.makedirs(self.LUT_path)
-    if not os.path.isdir(self.path):
-        os.makedirs(self.path)
    
     # try loading from default first
     try:
-      self.load_iluts_from_path()
-    # otherwise, download and interpolate
-    except:
-      pass
-
-    try:
-      self.download_LUTs()
-      self.interpolate_LUTs()
       self.load_iluts_from_path()
     except:
       pass
@@ -192,7 +174,7 @@ class handler:
     
     Loads interpolated look-up files in one of two ways:
 
-    1) if self.path is defined:
+    1) if self.iLUT_path is defined:
 
        - load all .ilut files in that path
     
@@ -207,25 +189,37 @@ class handler:
     # create iLUTs dictionary
     self.iLUTs = {}
 
-    # try loading from path (if defined)
-    if self.path:
+    # try loading from user defined-path
+    if self.userDefinedPath:
+      self.iLUT_path = self.userDefinedPath
       self.load_iluts_from_path() 
-      
-      # if iluts loaded correctly then we're good
+      return
+
+    # create default file paths?
+    if not os.path.isdir(self.files_path):
+      os.makedirs(self.files_path)
+    if not os.path.isdir(self.LUT_path):
+      os.makedirs(self.LUT_path)
+    if not os.path.isdir(self.iLUT_path):
+        os.makedirs(self.iLUT_path)
+
+    # search default file paths for this mission
+    if self.mission:
+      self.load_iluts_from_mission()
       if self.iLUTs:
         return
 
-    # otherwise, try downloading and interpolating
-    if self.mission:
-      self.load_iluts_from_mission() # mission not supported: options include ['Sentinel2']
+    # try downloading? 
+    try:
+      self.download_LUTs()
+      self.interpolate_LUTs()
+      self.load_iluts_from_path()
+    except:
+      pass
 
-      if not self.iLUTs:
-        print('fatal error: interpolated look up tables have not been loaded successfully!')
-        sys.exit(1)
-
-    # check path or mission were defined
-    if not self.path and not self.mission:
-      print('fatal error: must define self.path or self.mission for iLUT.handler() instance')
+    # otherwise return error
+    if not self.iLUT_path or not self.mission:
+      print('must define self.path or self.mission of iLUT.handler() instance')
       sys.exit(1)
 
 
