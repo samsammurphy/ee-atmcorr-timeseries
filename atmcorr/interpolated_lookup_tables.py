@@ -176,12 +176,16 @@ class handler:
     # try loading from default first
     try:
       self.load_iluts_from_path()
-
     # otherwise, download and interpolate
     except:
+      pass
+
+    try:
       self.download_LUTs()
       self.interpolate_LUTs()
       self.load_iluts_from_path()
+    except:
+      pass
 
   def get(self):
     """
