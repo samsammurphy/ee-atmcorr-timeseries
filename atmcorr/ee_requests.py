@@ -96,9 +96,10 @@ class TimeSeries:
     jan01 = ee.Date.fromYMD(TimeSeries.date.get('year'),1,1)
     TimeSeries.day_of_year = ee.Number(TimeSeries.date.difference(jan01,'day')).add(1)
     
-    # remove clouds?
-    if TimeSeries.applyCloudMask:
-      image = TimeSeries.cloudRemover(image)
+    # remove clouds and shadows?
+    if TimeSeries.removeClouds:
+      cloudRemover = TimeSeries.cloudRemover.fromMission(TimeSeries.mission)
+      TimeSeries.image = cloudRemover(image)
 
     # radiance at-sensor
     radiance = TimeSeries.radianceFromTOA()
@@ -119,22 +120,25 @@ class TimeSeries:
 
     return ee.Feature(TimeSeries.geom, properties)
 
-def request_meanRadiance(geom, startDate, stopDate, mission, cloudMask = False):
+def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds = False):
   """
   Creates Earth Engine invocation for mean radiance values within a fixed
   geometry over an image collection (optionally applies cloud mask first)
   """
 
   # initialize
+
+  # time and a place
   TimeSeries.geom = geom
   TimeSeries.startDate = startDate
   TimeSeries.stopDate = stopDate
-  TimeSeries.mission = mission
-  TimeSeries.applyCloudMask = cloudMask
 
-  # cloud removal method
-  if cloudMask:
-    TimeSeries.cloudRemover = CloudRemover.method(mission, cloudMask)       
+  # satellite mission
+  TimeSeries.mission = mission
+  
+  # cloud removal?
+  TimeSeries.removeClouds = removeClouds
+  TimeSeries.cloudRemover = CloudRemover  
 
   # Earth Engine image collection
   ic = ee.ImageCollection(mission_specifics.eeCollection(mission))\
