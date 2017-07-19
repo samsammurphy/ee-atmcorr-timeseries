@@ -120,7 +120,7 @@ class TimeSeries:
 
     return ee.Feature(TimeSeries.geom, properties)
 
-def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds = False):
+def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds):
   """
   Creates Earth Engine invocation for mean radiance values within a fixed
   geometry over an image collection (optionally applies cloud mask first)
@@ -136,7 +136,7 @@ def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds = Fals
   # satellite mission
   TimeSeries.mission = mission
   
-  # cloud removal?
+  # cloud removal
   TimeSeries.removeClouds = removeClouds
   TimeSeries.cloudRemover = CloudRemover  
 
