@@ -13,10 +13,14 @@ def read_kml(fileName, polygonName):
   """
  
   # read kml from file 
-  base_dir = os.path.dirname(os.getcwd())
-  fpath = os.path.join(base_dir,'files','kml',fileName)
-  with open(fpath,'rb') as file:
-    kml_string = file.read()
+  try:
+    base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    fpath = os.path.join(base_dir,'files','kml',fileName)
+    with open(fpath,'rb') as file:
+      kml_string = file.read()
+  except:
+    print('problem loading kml file: \n'+fpath)
+    return
 
   # kml object
   k = kml.KML()
