@@ -12,25 +12,25 @@ If this command works, you have successfully installed Docker.
 
 ## Usage
 
-1) run the docker container that contains all the dependencies
+- run the docker container that contains all the dependencies
 
 `docker run -i -t -p 8888:8888 samsammurphy/ee-python3-jupyter-atmcorr-timeseries:v1.5`
 
-(this will download everything you need).
+  (this will download everything you need).
 
-2) authenticate the Earth Engine API.
+- authenticate the Earth Engine API.
 
-`earthengine authenticate`
+  `earthengine authenticate`
 
-(this will print out a URL "Opening web browser to address: https://..." which needs to be opened in a web browser)
+  (this will print out a URL "Opening web browser to address: https://..." which needs to be opened in a web browser)
 
-3) pull in any updates
+- pull in any updates
 
-`cd ee-atmcorr-timeseries`
-`git pull`
+  `cd ee-atmcorr-timeseries`
+  `git pull`
 
-4) run the jupyter notebook
+- run the jupyter notebook
 
-`jupyter-notebook jupyter_notebooks/ee-atmcorr-timeseries.ipynb --ip='*' --port=8888 --allow-root`
+  `jupyter-notebook jupyter_notebooks/ee-atmcorr-timeseries.ipynb --ip='*' --port=8888 --allow-root`
 
-(open the URL: http:/localhost..)
+  (open the URL: http:/localhost..)
