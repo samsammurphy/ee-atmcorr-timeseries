@@ -4,40 +4,33 @@ Atmospherically corrected time series of satellite imagery from Google Earth Eng
 
 ## Installation
 
-Install [Anaconda](https://www.continuum.io/downloads).
+Install [Docker](https://docs.docker.com/engine/installation/#supported-platforms).
 
-If necessary, create a python3 environment
+If this command works, you have successfully installed Docker.
 
-`conda create -n my_python3_env`
-
-To use this environment, activate it as follows:
-
-`source activate my_python3_env`
-
-.. if on Windows the command is a bit shorter:
-
-`activate my_python3_env`
-
-If necessary, install the Earth Engine API:
-
-```
-pip install google-api-python-client
-pip install earthengine-api 
-```
-
-Authenticate the Earth Engine API.
-
-`earthengine authenticate`
+`docker run hello-world`
 
 ## Usage
 
-clone this repository
+1) run the docker container that contains all the dependencies
 
-`git clone https://github.com/samsammurphy/ee-atmcorr-timeseries.git`
+`docker run -i -t -p 8888:8888 samsammurphy/ee-python3-jupyter-atmcorr-timeseries:v1.5`
 
-run the jupyter notebook
+(this will download everything you need).
 
-```
-cd ee-atmcorr-timeseries/jupyter_notebooks
-jupyter-notebook ee-atmcorr-timeseries.ipynb
-```
+2) authenticate the Earth Engine API.
+
+`earthengine authenticate`
+
+(this will print out a URL "Opening web browser to address: https://..." which needs to be opened in a web browser)
+
+3) pull in any updates
+
+`cd ee-atmcorr-timeseries`
+`git pull`
+
+4) run the jupyter notebook
+
+`jupyter-notebook jupyter_notebooks/ee-atmcorr-timeseries.ipynb --ip='*' --port=8888 --allow-root`
+
+(open the URL: http:/localhost..)
