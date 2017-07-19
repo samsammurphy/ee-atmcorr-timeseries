@@ -26,8 +26,10 @@ If this command works, you have successfully installed Docker.
 
 - Pull in any updates
 
-  `cd ee-atmcorr-timeseries`
-  `git pull`
+  ```
+  cd ee-atmcorr-timeseries
+  git pull
+  ```
 
 - Run the jupyter notebook
 
