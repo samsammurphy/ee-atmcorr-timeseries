@@ -23,7 +23,7 @@ pip install earthengine-api
 
 ### Usage
 
-#### Docker
+#### Recommended: Docker
 
 Run the docker container with access to a web browser
 
@@ -44,7 +44,7 @@ jupyter-notebook ee-atmcorr-timeseries.ipynb --ip='*' --port=8888 --allow-root
 
 this will print out a URL that you can copy/paste into your web browser to run the code.
 
-### Conda
+#### Alternative: Conda
 
 If necessary, create a python3 environment
 
