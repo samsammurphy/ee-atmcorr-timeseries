@@ -6,7 +6,7 @@ Atmospherically corrected, cloud-free, time series of satellite imagery from [Go
 
 #### Recommended: Docker
 
-The following [docker](https://www.docker.com/community-edition) container has all dependencies to run the code in this repository
+The following [Docker](https://www.docker.com/community-edition) container has all dependencies to run the code in this repository
 
 `docker pull samsammurphy/ee-python3-jupyter-atmcorr-timeseries:v1.5`
 
