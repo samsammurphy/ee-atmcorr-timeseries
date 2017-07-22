@@ -33,7 +33,7 @@ Once inside the container, authenticate Earth Engine
 
 `earthengine authenticate`
 
-(tip: you can avoid repeating this using [docker commits](https://github.com/samsammurphy/6S_emulator/wiki/docker-commits))
+(tip: you can save your credentials, and avoid repeating this step, using [docker commits](https://github.com/samsammurphy/6S_emulator/wiki/docker-commits))
 
 Run the example jupyter notebook
 
