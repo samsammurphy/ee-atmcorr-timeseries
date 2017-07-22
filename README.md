@@ -8,7 +8,7 @@ Atmospherically corrected, cloud-free, time series of satellite imagery from [Go
 
 The following [Docker](https://www.docker.com/community-edition) container has all dependencies to run the code in this repository
 
-`docker pull samsammurphy/ee-python3-jupyter-atmcorr-timeseries:v1.5`
+`docker pull samsammurphy/ee-python3-jupyter-atmcorr-timeseries:v1.6`
 
 #### Alternative: Conda 
 
@@ -27,21 +27,20 @@ pip install earthengine-api
 
 Run the docker container with access to a web browser
 
-`$ docker run -i -t -p 8888:8888 samsammurphy/ee-python3-jupyter-atmcorr-timeseries:v1.5`
+`docker run -i -t -p 8888:8888 samsammurphy/ee-python3-jupyter-atmcorr-timeseries:v1.6`
 
 Once inside the container, authenticate Earth Engine
 
-`# earthengine authenticate`
+`earthengine authenticate`
 
-then grab the source code for this repo
+clone this repo
 
-`# git clone https://github.com/samsammurphy/ee-atmcorr-timeseries`
+`git clone https://github.com/samsammurphy/ee-atmcorr-timeseries.git`
 
 and run the example jupyter notebook
 
 ```
-# cd ee-atmcorr-timeseries.ipynb --ip='*' --port=8888 --allow-root
-# jupyter-notebook ee-atmcorr-timeseries/jupyter_notebooks
+jupyter-notebook jupyter_notebooks/ee-atmcorr-timeseries.ipynb --ip='*' --port=8888 --allow-root
 ```
 
 this will print out a URL that you can copy/paste into your web browser to run the code.
