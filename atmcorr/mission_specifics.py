@@ -45,6 +45,23 @@ def py6s_bandnames(mission):
 
   return switch[mission]
 
+def common_bandnames(mission):
+  """
+  visible to short-wave infrared wavebands (common bandnames)
+  """
+
+  switch = {
+    'Sentinel2':['aerosol','blue','green','red',
+    'redEdge1','redEdge2','redEdge3','nir','redEdge4',
+    'waterVapour','cirrus','swir1','swir2'],
+    'Landsat8':['aerosol','blue','green','red','nir','swir1','swir2','pan','cirrus'],
+    'Landsat7':['blue','green','red','nir','swir1','swir2'],
+    'Landsat5':['blue','green','red','nir','swir1','swir2'],
+    'Landsat4':['blue','green','red','nir','swir1','swir2']
+  }
+
+  return switch[mission]
+
 def py6S_sensor(mission):
   """
   Py6S satellite_sensor name from satellite mission name
