@@ -146,4 +146,4 @@ def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds = Fals
     .filterDate(startDate, stopDate)\
     .filter(mission_specifics.sunAngleFilter(mission))
 
-  return ic.map(TimeSeries.extractor)
+  return ic.map(TimeSeries.extractor).sort('timestamp')
