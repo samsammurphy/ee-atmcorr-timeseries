@@ -5,7 +5,7 @@ Reads kml files
 import os
 import ee
 from fastkml import kml
-
+    
 def read_kml(fileName, polygonName):
   """
   Atmospherically corrects radiance using correction coefficients
@@ -25,22 +25,23 @@ def read_kml(fileName, polygonName):
   # kml object
   k = kml.KML()
   k.from_string(kml_string)
-  
+
   # parse the object
   document = list(k.features())
   folder = list(document[0].features())
   polygons = list(folder[0].features())
   names = [p.name for p in polygons]
 
-  # find a polygon
-  index = names.index(polygonName)
-  polygon = polygons[index].geometry
+  # find polygon
+  polygon = polygons[names.index(polygonName)].geometry
 
   # get coordinates
-  x, y = polygon.exterior.coords.xy
-  coords = [xy for xy in list(zip(x,y))]
+  coords = polygon.exterior.coords
 
-  # create earth engine geometry
-  geom = ee.Geometry.Polygon(coords)
+  # create list of lonlat points
+  lon = [x[0] for x in coords]
+  lat = [x[1] for x in coords]
+  lonlat = [x for t in zip(lon,lat) for x in t]
 
-  return geom
+  # earth engine geometry
+  return ee.Geometry.Polygon(lonlat)
