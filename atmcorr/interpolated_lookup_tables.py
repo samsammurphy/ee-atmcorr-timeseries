@@ -134,7 +134,7 @@ class handler:
     looks for .ilut files in self.iLUT_path and loads them into self.iLUTs
     """
     
-    print('Loading interpolated look up tables (.ilut)..')
+    print('Loading interpolated look up tables (.ilut) for {}..'.format(self.mission))
 
     ilut_files = glob.glob(self.iLUT_path+os.path.sep+'*.ilut')
     if ilut_files:
