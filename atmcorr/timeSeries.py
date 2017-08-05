@@ -38,7 +38,7 @@ def timeseries_extrator(geom, startDate, stopDate, mission, removeClouds=True):
     
     return timeseries  
 
-def allTimeSeries(target, geom, startDate, stopDate, missions, removeClouds=True):
+def extractAllTimeSeries(target, geom, startDate, stopDate, missions, removeClouds=True):
     """
     Extracts time series for each mission and join them together
     """ 
@@ -121,7 +121,9 @@ def timeSeries(target, geom, startDate, stopDate, missions, removeClouds=True):
       pass
        
     # run extraction
-    allTimeSeries = timeSeries(target, geom, startDate, stopDate, missions)
+    allTimeSeries = extractAllTimeSeries(target, geom, startDate, stopDate, missions)
 
     # save to excel
     saveToExcel(target, allTimeSeries)
+
+    return allTimeSeries
