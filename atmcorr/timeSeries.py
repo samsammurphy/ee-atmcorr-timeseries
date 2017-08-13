@@ -1,6 +1,7 @@
 import os
 import ee
 import pandas as pd
+import datetime
 import interpolated_lookup_tables as iLUT
 from ee_requests import request_meanRadiance
 from atmcorr_timeseries import surface_reflectance_timeseries
@@ -82,6 +83,10 @@ def extractAllTimeSeries(target, geom, startDate, stopDate, missions, removeClou
     for key in allTimeSeries.keys():
         allTimeSeries[key] = flatten(allTimeSeries[key])
     
+    # add date column for human readability
+    allTimeSeries['date'] = [datetime.datetime.utcfromtimestamp(t) 
+      for t in allTimeSeries['timeStamp']]
+
     return allTimeSeries
 
 def saveToExcel(target, allTimeSeries):
@@ -112,18 +117,15 @@ def timeSeries(target, geom, startDate, stopDate, missions, removeClouds=True):
     3) save to excel
     """
 
-    # try loading from excel first
-    try:
-      allTimeSeries = loadFromExcel(target)
-      if allTimeSeries:
-        return allTimeSeries
-    except:
-      pass
-       
-    # run extraction
-    allTimeSeries = extractAllTimeSeries(target, geom, startDate, stopDate, missions)
+    # try loading from excel
+    allTimeSeries = loadFromExcel(target)
+    
+    # run extraction and save to excel
+    if not allTimeSeries:
+      allTimeSeries = extractAllTimeSeries(target, geom, startDate, stopDate, missions)
+      saveToExcel(target, allTimeSeries)
 
-    # save to excel
-    saveToExcel(target, allTimeSeries)
+    # target name
+    allTimeSeries['target'] = target
 
     return allTimeSeries

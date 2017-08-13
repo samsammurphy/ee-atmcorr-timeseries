@@ -1,18 +1,18 @@
 import pandas as pd
 import colorsys
 
-def hsv(DF):
+def hsv(df):
     """
     Hue-staturation-value
     """
-    rgb = list(zip(DF['red'], DF['green'], DF['blue']))
-    DF['hue'] = [colorsys.rgb_to_hsv(x[0], x[1], x[2])[0] for x in rgb]
-    DF['sat'] = [colorsys.rgb_to_hsv(x[0], x[1], x[2])[1] for x in rgb]
-    DF['val'] = [colorsys.rgb_to_hsv(x[0], x[1], x[2])[2] for x in rgb]
-    return DF
+    rgb = list(zip(df['red'], df['green'], df['blue']))
+    df['hue'] = [colorsys.rgb_to_hsv(x[0], x[1], x[2])[0] for x in rgb]
+    df['sat'] = [colorsys.rgb_to_hsv(x[0], x[1], x[2])[1] for x in rgb]
+    df['val'] = [colorsys.rgb_to_hsv(x[0], x[1], x[2])[2] for x in rgb]
+    return df
   
 
-def postProcessing(allTimeSeries, startDate, stopDate):
+def postProcessing(allTimeSeries):
     
     # create a dataframe
     df = pd.DataFrame.from_dict(allTimeSeries)
@@ -21,16 +21,14 @@ def postProcessing(allTimeSeries, startDate, stopDate):
     df.index = [pd.datetime.utcfromtimestamp(t) for t in allTimeSeries['timeStamp']]
     df = df.drop('timeStamp', axis=1)
 
-    # resample to daily
+    # HSV color space
+    df = hsv(df)
+
+    # daily freqeuncy
     daily = df.resample('D').mean()
 
-    # fill in NaNs
-    interpolated = daily.interpolate().ffill().bfill()
+    # interpolate
+    DF = daily.interpolate().ffill().bfill()
+    # DF = interpolated.truncate(before=startDate, after=stopDate)
 
-    # clip time series
-    DF = interpolated.truncate(before=startDate, after=stopDate)
-
-    # lets add hue-saturation-value color space
-    DF = hsv(DF)
-
-    return DF
+    return (df, DF)
