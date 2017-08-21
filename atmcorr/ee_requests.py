@@ -112,6 +112,7 @@ class TimeSeries:
     
     # export to feature collection
     properties = {
+      'mission':TimeSeries.mission,
       'imageID':image.get('system:index'),
       'timeStamp':ee.Number(image.get('system:time_start')).divide(1000),
       'mean_averages':mean_averages,
