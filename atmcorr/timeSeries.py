@@ -13,11 +13,7 @@ def timeseries_extrator(geom, startDate, stopDate, mission, removeClouds=True):
     This is the function for extracting atmospherically corrected, 
     cloud-free time series for a given satellite mission.
     """
-    
-    # interpolated lookup tables 
-    iLUTs = iLUT.handler(mission) 
-    iLUTs.get()
-    
+       
     # earth engine request
     print('Getting data from Earth Engine.. ')
     request = request_meanRadiance(geom, ee.Date(startDate), ee.Date(stopDate), \
@@ -34,6 +30,9 @@ def timeseries_extrator(geom, startDate, stopDate, mission, removeClouds=True):
     
     # atmospheric correction
     print('Running atmospheric correction')
+    # interpolated lookup tables 
+    iLUTs = iLUT.handler(mission) 
+    iLUTs.get()
     timeseries = surface_reflectance_timeseries(meanRadiance, iLUTs, mission)
     print('Done')
     
@@ -55,7 +54,6 @@ def extractAllTimeSeries(target, geom, startDate, stopDate, missions, removeClou
         'timeStamp':[]
     }
 
-    # for mission in ['Landsat4']:
     for mission in missions:
         
         timeseries = timeseries_extrator(geom, startDate, stopDate, mission, removeClouds=removeClouds) 
