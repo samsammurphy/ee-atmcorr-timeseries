@@ -18,7 +18,7 @@ import mission_specifics
 
 class AtmcorrInput:
   """
-  Grabs the inputs required for atmospheric correction with 6S emulator
+  Grabs the inputs required for atmospheric correction
   """
 
   # global elevation (kilometers)
@@ -83,7 +83,7 @@ class TimeSeries:
     d = ee.Number(TimeSeries.day_of_year).subtract(4).multiply(0.017202).cos().multiply(-0.01672).add(1)
     d_squared = d.multiply(d)
 
-    # radiace at-sensor
+    # radiance at-sensor
     rad = toa.select(ee.List(bands)).multiply(ESUNs).multiply(theta.cos()).divide(pi).divide(d_squared)
 
     return rad
@@ -124,6 +124,7 @@ def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds):
   """
   Creates Earth Engine invocation for mean radiance values within a fixed
   geometry over an image collection (optionally applies cloud mask first)
+  and also grabs atmospheric correction inputs
   """
 
   # initialize
