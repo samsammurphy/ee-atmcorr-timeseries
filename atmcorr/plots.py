@@ -64,24 +64,18 @@ def plot_history(target, fieldData, startDate, stopDate, save=False):
       ax.plot(x_points, y_points, scaley = False, **plot_kwargs)
       return ax
 
-  def plot_eruptive_history(ax, fieldData):
-    
-    unrest = eruptive_dates(fieldData, 'unrest')
-    eruption = eruptive_dates(fieldData, 'eruption')
-
-    ax = axvlines(ax, unrest, color='gray')
-    ax = axvlines(ax, eruption, color='red')
-    
-    return ax
-
   fig, ax = plt.subplots(figsize=(10,2))
-  ax = plot_eruptive_history(ax, fieldData)
   ax.set_ylabel('history') 
   ax.yaxis.set_major_formatter(plt.NullFormatter())
   ax.set_xlim(startDate,stopDate)
-  
+  unrest = eruptive_dates(fieldData, 'unrest')
+  eruption = eruptive_dates(fieldData, 'eruption')
+  ax = axvlines(ax, unrest, color='gray')
+  ax = axvlines(ax, eruption, color='red')
+
   if save:
     saveFig(fig, target, fname='history.png')
+
 
 def plot_acid(target, fieldData, startDate, stopDate, history=True, save=False):
 
@@ -145,6 +139,7 @@ def plot_hueSticks(target, data, startDate, stopDate, ylim=False, save=False):
     # interpolate
     resampled = df.resample('M').mean()
     DF = resampled.interpolate().ffill().bfill()
+    DF = df
     
     # plot space
     fig, ax = plt.subplots(figsize=(10,4))
@@ -157,7 +152,7 @@ def plot_hueSticks(target, data, startDate, stopDate, ylim=False, save=False):
       hue = DF['hue'][i] 
       if not np.isnan(hue):
         pure_hue = colorsys.hsv_to_rgb(hue,1,1)
-        plt.axvline(x=date, color=pure_hue, linewidth=2)
+        plt.axvline(x=date, color=pure_hue, linewidth=2.5)
 
     
     # time line
@@ -180,7 +175,7 @@ def plot_other(target, fieldData, startDate, stopDate, ylim=False, history=True,
       arr = np.array(fieldData[name])
       ax.plot(fieldData['date'], arr/np.nanmax(arr), color=color, label=name)
       
-    normPlot(ax, fieldData, 'SO4', color= '#17becf')
+    # normPlot(ax, fieldData, 'SO4', color= '#17becf')
     normPlot(ax, fieldData, 'Fe', color= '#d62728')
     normPlot(ax, fieldData, 'Mg', color= '#9467bd')
     normPlot(ax, fieldData, 'Ca', color= '#ff7f0e')
