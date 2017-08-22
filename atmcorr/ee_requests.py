@@ -132,8 +132,8 @@ def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds):
 
   # time and a place
   TimeSeries.geom = geom
-  TimeSeries.startDate = startDate
-  TimeSeries.stopDate = stopDate
+  TimeSeries.startDate = ee.Date(startDate)
+  TimeSeries.stopDate = ee.Date(stopDate)
 
   # satellite mission
   TimeSeries.mission = mission
@@ -148,4 +148,7 @@ def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds):
     .filterDate(startDate, stopDate)\
     .filter(mission_specifics.sunAngleFilter(mission))
 
-  return ic.map(TimeSeries.extractor).sort('timestamp')
+  # data to be extracted (chronological)
+  data = ic.map(TimeSeries.extractor).sort('timestamp')
+
+  return ee.FeatureCollection(data)
