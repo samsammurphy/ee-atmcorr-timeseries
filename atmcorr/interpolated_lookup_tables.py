@@ -142,7 +142,6 @@ class handler:
         for f in ilut_files:
           bandName_py6s = os.path.basename(f).split('.')[0][-2:]
           self.iLUTs[bandName_py6s] = pickle.load(open(f,'rb'))
-        print('Success')
         return
       except:
         print('error loading file: \n'+f)      
