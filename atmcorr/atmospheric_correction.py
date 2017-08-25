@@ -1,25 +1,9 @@
 
-from mission_specifics import common_bandnames, ee_bandnames, py6s_bandnames
-import interpolated_lookup_tables as iLUT
 import math
+import pandas as pd
 
-
-def find_unique_missions(df):
-  
-  return ['Landsat4','Landsat5','Landsat7','Landsat8','Sentinel2']
-
-def iLUT_handler(df):
-  
-  iLUTs = {}
-  
-  missions = find_unique_missions(df)
-  
-  for mission in missions:
-    these_iLUTs = iLUT.handler(mission)
-    these_iLUTs.get()
-    iLUTs[mission] = these_iLUTs.iLUTs
-  
-  return iLUTs
+import interpolated_lookup_tables as iLUT
+from mission_specifics import common_bandnames, ee_bandnames, py6s_bandnames
 
 def surface_reflectance(radiance, iLUT, row):
   """
@@ -35,7 +19,7 @@ def surface_reflectance(radiance, iLUT, row):
                     row['alt'])
 
   # elliptical orbit correction
-  elliptical_orbit_correction = 0.03275104*math.cos(math.radians(row['doy']/1.04137484)) + 0.96804905
+  elliptical_orbit_correction = 0.03275104*math.cos(math.radians(float(row['doy'])/1.04137484)) + 0.96804905
   
   # correction coefficients
   a = perihelion[0] * elliptical_orbit_correction
@@ -47,44 +31,73 @@ def surface_reflectance(radiance, iLUT, row):
   except:
     SR = None
 
-  return {'SR':SR, 'a':a, 'b':b}
+  return (SR, a, b)
 
 def bandname_translator(mission, band):
     
-    i = common_bandnames[mission].index(band)
-    ee_bandname = ee_bandnames[mission][i]
-    py6s_bandname = py6s_bandnames[mission][i]
+    i = common_bandnames(mission).index(band)
+    ee_bandname = ee_bandnames(mission)[i]
+    py6s_bandname = py6s_bandnames(mission)[i]
 
     return (ee_bandname, py6s_bandname)
 
-def run_atmcorr(df):
+def iLUT_handler(df):
+  
+  iLUTs = {}
+  
+  missions = df.mission.unique()
+  
+  for mission in missions:
+    these_iLUTs = iLUT.handler(mission)
+    these_iLUTs.get()
+    iLUTs[mission] = these_iLUTs.iLUTs
+  
+  return iLUTs
 
-  # surface reflectances time series
-  SR_timeseries = []
+def add_atmcorr_to_df(atmcorr, df):
 
-  # interpolated lookup tables
+  # dataframe format
+  SR = pd.DataFrame(x[0] for x in atmcorr)
+  coeffs = pd.DataFrame(x[1] for x in atmcorr)
+
+  # time index
+  SR.index = df.index
+  coeffs.index = df.index
+
+  return pd.concat([df, SR, coeffs], axis=1)
+
+def run_atmcorr(df, force=False):
+  
+  # already corrected?
+  if 'blue' in df.columns.tolist() and not force:
+    print("Surface reflectance already calculated")
+    print('if override required --> data = run_atmcorr(data, force=True)')
+    return df
+
+  atmcorr = []
   iLUTs = iLUT_handler(df)
 
-  # iterate through input dataframe
-  # for index, row in df.iterrows():
-  #   x = row['column_name']
+  print('Calculating surface reflectance')
+  for index, row in df.iterrows():
 
-  # surface reflectances for this scene
-  SR_and_coeffs = {}
+    SRs = {}
+    coeffs = {}
 
-  for band in ['blue','green','red','nir','swir1','swir2']:
-    
-    ee_bandname, py6s_bandname = bandname_translator(mission, band)
-    
-    radiance = row[ee_bandname]
-    iLUT = iLUTs[mission][py6s_bandname]
+    for band in ['blue','green','red','nir','swir1','swir2']:
+      
+      mission = row['mission']
+      ee_bandname, py6s_bandname = bandname_translator(mission, band)
+      
+      radiance = row[ee_bandname]
+      iLUT = iLUTs[mission][py6s_bandname]
 
-    SR_and_coeffs[band] = surface_reflectance(radiance, iLUT, row)
-  
-  # add to list
-  SR_timeseries.append(SR_and_coeffs)
+      SR, a, b = surface_reflectance(radiance, iLUT, row)
 
-  # add surface reflectance to dataframe
-  # format = metadata + SR + rest
+      SRs[band] = SR
+      coeffs[band+'_coeffs'] = (a, b)
+
+    atmcorr.append((SRs, coeffs))
+
+  df = add_atmcorr_to_df(atmcorr, df)
 
   return df
