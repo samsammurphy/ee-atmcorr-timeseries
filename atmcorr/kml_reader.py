@@ -6,7 +6,7 @@ import os
 import ee
 from fastkml import kml
     
-def read_kml(fileName, polygonName):
+def read_kml(polygonName, kmlPath=False, kmlFile=False):
   """
   Atmospherically corrects radiance using correction coefficients
   at perihelion adjusted for Earth's ellipitcal orbit
@@ -14,8 +14,11 @@ def read_kml(fileName, polygonName):
  
   # read kml from file 
   try:
-    base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    fpath = os.path.join(base_dir,'files','kml',fileName)
+    if kmlPath:
+      fpath = kmlPath
+    else:
+      base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+      fpath = os.path.join(base_dir,'files','kml',kmlFile)
     with open(fpath,'rb') as file:
       kml_string = file.read()
   except:
