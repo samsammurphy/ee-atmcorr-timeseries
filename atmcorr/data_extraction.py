@@ -241,17 +241,17 @@ def default_method_extraction(target, requests):
   3) export to google drive
   """
 
-# data = load_from_excel(target)
+  data = load_from_excel(target)
 
-#     if data is None:
-#         try:
-#             return extract_using_getInfo(requests)
-#         except Exception as e:
-#             try:
-#                 print(e)
-#                 return export_to_google_drive(requests, target)
-#             except:
-#                 pass
+  if data is None:
+      try:
+          return extract_using_getInfo(requests)
+      except Exception as e:
+          try:
+              print(e)
+              return export_to_google_drive(requests, target)
+          except:
+              pass
 
 def data_extractor(target, requests, method=False):
   """
@@ -269,18 +269,18 @@ def data_extractor(target, requests, method=False):
   else:
     data = default_method_extraction(target, requests)
 
-  # chronological_sort
-  data = data.sort_index()
-  
-  # column ordering
-  data = nicely_ordered_columns(data)
+  if data is not None:
 
-  # save local copy
-  save_to_excel(data, target)
+    # chronological_sort
+    data = data.sort_index()
+    
+    # column ordering
+    data = nicely_ordered_columns(data)
 
-  return data
-  
+    # save local copy
+    save_to_excel(data, target)
 
+    return data
 
 
 def save_to_excel(df, target):
