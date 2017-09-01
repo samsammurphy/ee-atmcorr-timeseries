@@ -12,6 +12,7 @@ import pandas as pd
 import time
 import json
 import re
+import glob
 
 def extract_using_getInfo(requests):
     """
@@ -23,15 +24,15 @@ def extract_using_getInfo(requests):
     
     print('Requesting data locally')
 
-    dataList = []
+    dataLists = []
 
     for mission in requests.keys():
         print(mission+'..')
         localData = requests[mission].getInfo()
-        dataList.append(localData['features'])
+        dataLists.append(localData['features'])
         
     # flatten separate mission lists into a single list
-    dataList = [item for sublist in dataList for item in sublist]
+    dataList = [item for sublist in dataLists for item in sublist]
     
     # convert to pandas dataframe
     df = dataFrame_from_list(dataList)  
@@ -282,10 +283,8 @@ def data_extractor(target, requests, method=False):
 
     return data
 
-
 def save_to_excel(df, target):
     
-    # output directory
     basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     excel_dir = os.path.join(basedir,'files','excel')
     if not os.path.exists(excel_dir):
@@ -295,7 +294,6 @@ def save_to_excel(df, target):
 
 def load_from_excel(target):
   
-    # excel directory
     basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     excel_path = os.path.join(basedir,'files','excel',target+'.xlsx')
 
