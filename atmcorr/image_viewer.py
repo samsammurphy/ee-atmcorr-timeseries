@@ -58,6 +58,13 @@ def radianceFromTOA(img, scene):
 
   return rad
 
+def tuple_format(obj):
+  
+  if isinstance(obj, tuple):
+    return obj
+  else:
+    return make_tuple(obj)
+  
 def apply_coefficients(rad, scene, band):
   """
   Applies coefficients to single waveband
@@ -66,7 +73,7 @@ def apply_coefficients(rad, scene, band):
   i = common_bandnames(scene['mission']).index(band)
   ee_bandname = ee_bandnames(scene['mission'])[i]
 
-  coeffs = make_tuple(scene[band+'_coeffs'])
+  coeffs = tuple_format(scene[band+'_coeffs'])
   a = coeffs[0]
   b = coeffs[1]
 
