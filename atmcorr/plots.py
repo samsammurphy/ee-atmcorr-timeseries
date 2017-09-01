@@ -10,13 +10,15 @@ class Plot():
 
   def __init__(self, data, startDate, stopDate):
     
-    # user input
-    self.data = data
+    if 'clean' in list(data.columns):
+      self.data = data[data.clean == 1]
+    else:
+      self.data = data
+
     self.startDate = pd.datetime.strptime(startDate,'%Y-%m-%d')
     self.stopDate = pd.datetime.strptime(stopDate,'%Y-%m-%d')
     
-    # daily interpolation of input data
-    self.interp = data.resample('D').mean().interpolate().ffill().bfill()
+    self.daily = self.data.resample('D').mean().interpolate().ffill().bfill()
 
   def hue(self, ylim=False, outpath=False):
       """
@@ -25,7 +27,7 @@ class Plot():
 
       # data
       df = self.data
-      DF = self.interp
+      DF = self.daily
 
       # plot space
       fig, ax = plt.subplots(figsize=(10,4))
@@ -53,21 +55,25 @@ class Plot():
       if outpath:
         fig.savefig(outpath)
 
-  def graph(self, varName, outpath=False):
+  def graph(self, varName, outpath=False, ylim=False):
       """
       plot simple timeseries graph
       """
 
       # data
       df = self.data
-      DF = self.interp
+      DF = self.daily
 
       fig, ax = plt.subplots(figsize=(10,4))
+
+      # axes range
+      ax.set_xlim(self.startDate,self.stopDate)
+      if ylim:
+        ax.set_ylim(ylim[0], ylim[1])
 
       # plot interpolated
       ax.plot(DF[varName],color='#1f77b4')
       ax.set_ylabel(varName)
-      ax.set_xlim(self.startDate,self.stopDate)
       
       # plot original 
       ax.plot(df[varName],'o',color='#1f77b4')
