@@ -55,7 +55,8 @@ class TimeSeries:
     
     mean_averages = image.reduceRegion(\
           reducer = ee.Reducer.mean(),\
-          geometry = geom)
+          geometry = geom,\
+          maxPixels = 2E7)
     
     return mean_averages
    
