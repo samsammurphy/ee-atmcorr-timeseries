@@ -55,8 +55,7 @@ class TimeSeries:
     
     mean_averages = image.reduceRegion(\
           reducer = ee.Reducer.mean(),\
-          geometry = geom,\
-          maxPixels = 2E7)
+          geometry = geom)
     
     return mean_averages
    
@@ -65,30 +64,35 @@ class TimeSeries:
     calculate at-sensor radiance from top-of-atmosphere (TOA) reflectance
     """
 
-    # top of atmosphere reflectance
     toa = mission_specifics.TOA(TimeSeries.image, TimeSeries.mission)
 
-    # solar irradiances
     ESUNs = mission_specifics.ESUNs(TimeSeries.image, TimeSeries.mission)
 
-    # wavebands
-    bands = mission_specifics.ee_bandnames(TimeSeries.mission)
+    wavebands = mission_specifics.ee_bandnames(TimeSeries.mission)
 
     # solar zenith (radians)
     theta = mission_specifics.solar_z(TimeSeries.image, TimeSeries.mission).multiply(0.017453293)
 
-    # circular math
     pi = ee.Number(3.14159265359)
 
     # Earth-Sun distance squared (AU)
     d = ee.Number(TimeSeries.day_of_year).subtract(4).multiply(0.017202).cos().multiply(-0.01672).add(1)
     d_squared = d.multiply(d)
 
-    # radiance at-sensor
-    rad = toa.select(ee.List(bands)).multiply(ESUNs).multiply(theta.cos()).divide(pi).divide(d_squared)
+    radiance = toa.select(ee.List(wavebands)).multiply(ESUNs).multiply(theta.cos()).divide(pi).divide(d_squared)
 
-    return rad
+    return radiance
   
+  def meanBT():
+    
+    tir_waveband = mission_specifics.tir_bandnames(TimeSeries.mission)
+    
+    brightness_temperature = TimeSeries.image.select(tir_waveband)
+
+    mean_brightness_temperature = TimeSeries.meanReduce(brightness_temperature, TimeSeries.geom)
+
+    return mean_brightness_temperature
+
   def extractor(image):
     
     # update TimeSeries class
@@ -97,59 +101,52 @@ class TimeSeries:
     jan01 = ee.Date.fromYMD(TimeSeries.date.get('year'),1,1)
     TimeSeries.day_of_year = ee.Number(TimeSeries.date.difference(jan01,'day')).add(1)
     
-    # remove clouds and shadows?
-    if TimeSeries.removeClouds:
-      cloudRemover = TimeSeries.cloudRemover.fromMission(TimeSeries.mission)
-      TimeSeries.image = cloudRemover(image)
+    cloudRemover = TimeSeries.cloudRemover.fromMission(TimeSeries.mission)
+    TimeSeries.image = cloudRemover(image)
 
-    # radiance at-sensor
     radiance = TimeSeries.radianceFromTOA()
 
-    # mean average radiance
-    mean_averages = TimeSeries.meanReduce(radiance, TimeSeries.geom)
+    mean_radiance = TimeSeries.meanReduce(radiance, TimeSeries.geom)
 
-    # atmospheric correction inputs
     atmcorr_inputs = AtmcorrInput.get()
-    
-    # export to feature collection
+
+    isSentinel2 = ee.String(TimeSeries.mission).match('Sentinel2')
+    brightness_temperature = ee.Algorithms.If(isSentinel2, {'na':None}, TimeSeries.meanBT())
+
     properties = {
       'mission':TimeSeries.mission,
       'imageID':image.get('system:index'),
       'timeStamp':ee.Number(image.get('system:time_start')).divide(1000),
-      'mean_averages':mean_averages,
-      'atmcorr_inputs':atmcorr_inputs      
-    }  
+      'mean_radiance':mean_radiance,
+      'atmcorr_inputs':atmcorr_inputs,
+      'brightness_temperature': brightness_temperature
+    } 
 
     return ee.Feature(TimeSeries.geom, properties)
 
-def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds):
+def data_request(geom, startDate, stopDate, mission):
   """
-  Creates Earth Engine invocation for mean radiance values within a fixed
-  geometry over an image collection (optionally applies cloud mask first)
-  and also grabs atmospheric correction inputs
+  Creates Earth Engine invocation for data:
+    - mean radiance 
+    - atmospheric correction inputs (VSWIR bands)
+    - brightness temperature (if available)
+    
+  from within a geometry through time after cloud mask
   """
 
-  # initialize
-
-  # time and a place
   TimeSeries.geom = geom
   TimeSeries.startDate = ee.Date(startDate)
   TimeSeries.stopDate = ee.Date(stopDate)
 
-  # satellite mission
   TimeSeries.mission = mission
   
-  # cloud removal
-  TimeSeries.removeClouds = removeClouds
   TimeSeries.cloudRemover = CloudRemover  
 
-  # Earth Engine image collection
   ic = ee.ImageCollection(mission_specifics.eeCollection(mission))\
     .filterBounds(geom)\
     .filterDate(startDate, stopDate)\
     .filter(mission_specifics.sunAngleFilter(mission))
 
-  # data to be extracted (chronological)
   data = ic.map(TimeSeries.extractor).sort('timestamp')
 
   return ee.FeatureCollection(data)
