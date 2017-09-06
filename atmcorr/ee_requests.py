@@ -84,6 +84,9 @@ class TimeSeries:
     return radiance
   
   def meanBT():
+    """
+    average brightness tempurature in geom through time
+    """
     
     tir_waveband = mission_specifics.tir_bandnames(TimeSeries.mission)
     
@@ -110,8 +113,8 @@ class TimeSeries:
 
     atmcorr_inputs = AtmcorrInput.get()
 
-    isSentinel2 = ee.String(TimeSeries.mission).match('Sentinel2')
-    brightness_temperature = ee.Algorithms.If(isSentinel2, {'na':None}, TimeSeries.meanBT())
+    is_Sentinel2 = ee.String(TimeSeries.mission).match('Sentinel2')
+    brightness_temperature = ee.Algorithms.If(is_Sentinel2, {'na':None}, TimeSeries.meanBT())
 
     properties = {
       'mission':TimeSeries.mission,
