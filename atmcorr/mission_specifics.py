@@ -62,6 +62,22 @@ def common_bandnames(mission):
 
   return switch[mission]
 
+def tir_bandnames(mission):
+  """
+  Thermal infrared band in Google Earth Engine parlance
+  """
+  
+  switch = {
+    'Sentinel2':None,
+    'Landsat8':['B10', 'B11'],
+    'Landsat7':['B6_VCID_1', 'B6_VCID_2'],
+    'Landsat5':['B6'],
+    'Landsat4':['B6']
+  }
+
+  return switch[mission]
+  
+
 def py6S_sensor(mission):
   """
   Py6S satellite_sensor name from satellite mission name
