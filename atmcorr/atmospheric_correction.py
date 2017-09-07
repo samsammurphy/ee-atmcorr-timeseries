@@ -28,6 +28,7 @@ def surface_reflectance(radiance, iLUT, row):
   # surface reflectance
   try:
     SR = (radiance - a) / b
+    SR = max(SR, 0) # zero cap to avoid saturation explotion for low reflectivity surfaces
   except:
     SR = None
 
