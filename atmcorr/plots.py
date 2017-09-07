@@ -55,7 +55,7 @@ class Plot():
       if outpath:
         fig.savefig(outpath)
 
-  def graph(self, varName, outpath=False, ylim=False):
+  def graph(self, varName, outpath=False, ylim=False, ylabel=False):
       """
       plot simple timeseries graph
       """
@@ -66,17 +66,17 @@ class Plot():
 
       fig, ax = plt.subplots(figsize=(10,4))
 
-      # axes range
+      ax.plot(DF[varName],color='#1f77b4')
+      ax.plot(df[varName],'o',color='#1f77b4')
+
       ax.set_xlim(self.startDate,self.stopDate)
       if ylim:
         ax.set_ylim(ylim[0], ylim[1])
 
-      # plot interpolated
-      ax.plot(DF[varName],color='#1f77b4')
-      ax.set_ylabel(varName)
-      
-      # plot original 
-      ax.plot(df[varName],'o',color='#1f77b4')
+      if ylabel:
+        ax.set_ylabel(ylabel)   
+      else:
+        ax.set_ylabel(varName)   
 
       # make the dates exact
       ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
