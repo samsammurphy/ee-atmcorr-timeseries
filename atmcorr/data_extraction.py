@@ -103,7 +103,10 @@ class Csv:
       BT1 = [x[list(x.keys())[0]] if x[list(x.keys())[0]] != 'null' else None for x in BT_dics]
       BT2 = [x[list(x.keys())[1]] if len(list(x.keys())) == 2 else None for x in BT_dics]
 
-      items = [('tir1', BT1),('tir2', BT2)]
+      BT1_celsius = [float(x)-273.15 if x != None else None for x in BT1]
+      BT2_celsius = [float(x)-273.15 if x != None else None for x in BT2]
+
+      items = [('Temp_1', BT1_celsius),('Temp_2', BT2_celsius)]
       
       BT = pd.DataFrame.from_items(items)  
 
@@ -262,6 +265,7 @@ class Extract:
         try:
           return Excel.load(target)
         except:
+          print('Problem loading from:\n'+os.path.join(Excel.dir(),target+'.xlsx'))
           return
 
       if method.lower() == 'getinfo':
@@ -274,7 +278,8 @@ class Extract:
       if method.lower() == 'googledrive':
         try:
           return GoogleDrive.export(requests, target)
-        except:
+        except Exception as e:
+          print(e)
           return
       
       print('method not recognized: '+method)
