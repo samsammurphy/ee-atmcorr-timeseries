@@ -1,3 +1,7 @@
+"""
+Functionality for finding and viewing images in time series 
+"""
+
 import math
 import ee
 from ast import literal_eval as make_tuple
