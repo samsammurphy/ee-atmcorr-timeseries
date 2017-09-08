@@ -20,7 +20,7 @@ class Plot():
     
     self.daily = self.data.resample('D').mean().interpolate().ffill().bfill()
 
-  def hue(self, ylim=False, outpath=False):
+  def hue(self, ylim=False, fileNamePrefix=False):
       """
       plot hue sticks through time
       """
@@ -51,11 +51,12 @@ class Plot():
       ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
       
       fig.show()
-      # save to file?
-      if outpath:
-        fig.savefig(outpath)
 
-  def graph(self, varName, outpath=False, ylim=False, ylabel=False):
+      # save to file?
+      if fileNamePrefix:
+        fig.savefig(fileNamePrefix+'_hue.png')
+
+  def graph(self, varName, fileNamePrefix=False, ylim=False, ylabel=False):
       """
       plot simple timeseries graph
       """
@@ -82,5 +83,5 @@ class Plot():
       ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
 
       # save to file?
-      if outpath:
-        fig.savefig(outpath)
+      if fileNamePrefix:
+        fig.savefig(fileNamePrefix+'_'+varName+'.png')
