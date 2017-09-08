@@ -6,10 +6,17 @@ Batch export/download of 'quicklook' images to/from cloud storage
 
 import os
 import ee
+import sys
 import numpy as np
 import pandas as pd
 from image_viewer import *
-from google.cloud import storage
+
+try:
+  from google.cloud import storage
+except:
+  print('\nDo you have the Google Cloud Client Library for Python installed?')
+  print('\npip install google-cloud')
+  sys.exit(1)
 
 def export_rgb(data, region, bucket, targetName=False, maxValue=False):
     """
@@ -86,5 +93,3 @@ def download_rgb(targetName, bucketName, local_dir):
     
     except Exception as e:
       print(e)
-      print('\nDo you have the Google Cloud Client Library for Python installed?')
-      print('\npip install google-cloud')
