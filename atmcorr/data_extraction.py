@@ -293,18 +293,20 @@ class Extract:
       2) getinfo
       3) export to google drive
       """
+      
+      try:
+        return Excel.load(target)
+      except:
+        pass
 
-      data = Excel.load(target)
-
-      if data is None:
-          try:
-              return GetInfo.extraction(requests)
-          except Exception as e:
-              try:
-                  print(e)
-                  return GoogleDrive.export(requests, target)
-              except:
-                  pass
+      try:
+        return GetInfo.extraction(requests)
+      except Exception as e:
+        print(e)
+        try:
+          return GoogleDrive.export(requests, target)
+        except:
+          pass
 
   def timeseries(target, geom, startDate, stopDate, missions, method=False):
       """
