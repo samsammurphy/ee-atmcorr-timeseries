@@ -14,8 +14,12 @@ from image_viewer import *
 try:
   from google.cloud import storage
 except:
-  print('\nDo you have the Google Cloud Client Library for Python installed?')
-  print('\npip install google-cloud')
+  print('\nDo you have the Google Cloud Client Library for Python installed?\n')
+  print('*'*42)
+  print('pip install google-cloud')
+  print('*'*42)
+  #  conda install -c conda-forge google-cloud-storage 
+  #  (might need to create a new environment)
   sys.exit(1)
 
 def export_rgb(data, region, bucket, targetName=False, maxValue=False):
