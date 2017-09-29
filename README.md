@@ -47,3 +47,8 @@ cd ee-atmcorr-timeseries/jupyter_notebooks
 jupyter-notebook ee-atmcorr-timeseries.ipynb
 ```
 
+## Setup-time VS Run-time
+
+This code is optimized to run atmospheric correction of large image collections. It trades setup-time (i.e. ~30 mins) for run time (i.e. ~ 1 minute). Setup is only performed once and is fully automated. This solves the problem of running radiative transfer code for each image which would take ~2 secs/scene, 500 scenes would therefore take over 16 mins (everytime).
+
+It does this using the [6S emulator](https://github.com/samsammurphy/6S_emulator) which is based on n-dimensional interpolated lookup tables (iLUTs). These iLUTs are automatically downloaded and constructed locally.
