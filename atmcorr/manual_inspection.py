@@ -8,7 +8,7 @@ import pandas as pd
 
 def add_clean_column(df, clean_dir):
   
-  def binary_boolean(x):
+  def numeric_boolean(x):
     if x:
       return 1
     else:
@@ -18,13 +18,13 @@ def add_clean_column(df, clean_dir):
     
     all_IDs = list(df['imageID'])
 
-    clean_image_paths = glob.glob(os.path.join(clean_dir, '*.tif'))
-    clean_image_fnames = [os.path.basename(x) for x in clean_image_paths]
-    clean_IDs = [os.path.splitext(x)[0].split('_')[-1] for x in clean_image_fnames]
+    clean_paths = sorted(glob.glob(os.path.join(clean_dir, '*.tif')))
+    clean_filenames = [os.path.basename(x).split('.')[0] for x in clean_paths]
+    clean_IDs = ['_'.join(x.split('_')[2:]) for x in clean_filenames]
 
-    clean_list = [binary_boolean(x in clean_IDs) for x in all_IDs]
+    clean_flag = [numeric_boolean(str(x) in clean_IDs) for x in all_IDs]
 
-    df['clean'] = pd.Series(clean_list, index=df.index)
+    df['clean'] = pd.Series(clean_flag, index=df.index)
 
     return df
   
