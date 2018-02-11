@@ -1,10 +1,14 @@
+## Atmospheric Correction of Sentinel2 and Landsat
+
+If your aim is to correct a small number (e.g. 10s) of images then consider using [gee-atmcorr-S2](https://github.com/samsammurphy/gee-atmcorr-S2) which uses [Py6S](http://py6s.readthedocs.io/en/latest/) directly. It has less set up time. 
+
 ## Purpose
 
-Easily create time series of Landsat and Sentinel 2 data for anywhere on Earth. 
+This repo is for atmospherically correcting large numbers (e.g. 100s) of Sentinel2 and Landsat images. Although automated, it has a longer set up time as it will download then interpolate look up tables. However, it should run considerably faster. Time series have the following properties:
 
 * atmospherically corrected
 * cloud-masked
-* save to excel
+* saved to excel
 * pretty plots
 
 ## Installation
