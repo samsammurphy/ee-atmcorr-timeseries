@@ -11,6 +11,10 @@ This repo is for atmospherically correcting large numbers (e.g. 100s) of Sentine
 * saved to excel
 * pretty plots
 
+## Bonus
+
+This approach might also be more suitable for onboard processing (e.g. drones, nanosats) as the computational heavy lifting can be done in advanced.
+
 ## Installation
 
 Install [Docker](https://docs.docker.com/install/) then build the Dockerfile
