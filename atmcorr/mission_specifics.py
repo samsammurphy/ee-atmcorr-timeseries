@@ -102,7 +102,7 @@ def eeCollection(mission):
     'Sentinel2':'COPERNICUS/S2',
     'Landsat8':'LANDSAT/LC8_L1T_TOA_FMASK',
     'Landsat7':'LANDSAT/LE7_L1T_TOA_FMASK',
-    'Landsat5':'LANDSAT/LT5_L1T_TOA_FMASK',
+    'Landsat5':'LANDSAT/LT05/C01/T1_SR',
     'Landsat4':'LANDSAT/LT4_L1T_TOA_FMASK'
   }
 
