@@ -178,7 +178,7 @@ class Atmospheric():
       img = ee.Algorithms.If(img,\
                                # all good
                                img\
-                               .select(['Corrected_Optical_Depth_Land_Mean_Mean_550'])\
+                               .select(['Aerosol_Optical_Depth_Land_Mean_Mean_550'])\
                                .divide(1000)\
                                .rename(['AOT_550']),\
                               # missing month
