@@ -42,6 +42,12 @@ cd ee-atmcorr-timeseries/jupyter_notebooks
 jupyter-notebook ee-atmcorr-timeseries.ipynb --ip='*' --port=8888 --allow-root
 ```
 
+This will print out a URL that you can copy/paste into your web browser to run the code. 
+
+If the URL is *http://(something_in_parentheses)* then you will need to change the parentheses and its contents for *localhost*. A valid URL should look something like..
+
+http://localhost:8888/?token=...
+
 ## Notes on setup-time VS run-time
 
 This code is optimized to run atmospheric correction of large image collections. It trades setup-time (i.e. ~30 mins) for run time. Setup is only performed once and is fully automated. This solves the problem of running radiative transfer code for each image which would take ~2 secs/scene, 500 scenes would therefore take over 16 mins (everytime).
