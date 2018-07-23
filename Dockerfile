@@ -35,5 +35,6 @@ RUN conda update -y conda                       && \
 RUN conda install -c anaconda pip               && \
     pip install                                    \
     earthengine-api                                \
-    openpyxl
+    openpyxl                                       \
+    oauth2client
 
