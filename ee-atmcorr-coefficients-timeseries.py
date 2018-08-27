@@ -32,7 +32,7 @@ _ = timeSeries(target, geom, START_DATE, STOP_DATE, MISSIONS)
 
 SRTM = ee.Image('CGIAR/SRTM90_V4')  # Shuttle Radar Topography mission covers *most* of the Earth
 altitude = SRTM.reduceRegion(reducer=ee.Reducer.mean(), geometry=geom.centroid()).get('elevation').getInfo()
-km = altitude/1000  # i.e. Py6S uses units of kilometers
+KM = altitude/1000  # i.e. Py6S uses units of kilometers
 
 # The Sentinel-2 image collection
 S2 = ee.ImageCollection('COPERNICUS/S2').filterBounds(geom) \
@@ -67,6 +67,7 @@ def get_corr_coef(imageInfo: dict, atmParams: dict) -> list:
 
     Uses DIRPATH global variable
     Uses NO_OF_BANDS global variable
+    Uses KM global variable
     Returns list of 2-length lists
     """
     corr_coefs = []
@@ -76,7 +77,7 @@ def get_corr_coef(imageInfo: dict, atmParams: dict) -> list:
         filepath = DIRPATH + 'S2A_MSI_' + band + '.ilut'
         with open(filepath, 'rb') as ilut_file:
             iluTable = pickle.load(ilut_file)
-        a, b = iluTable(atmParams[0], atmParams[1], atmParams[2], atmParams[3], km)
+        a, b = iluTable(atmParams['solar_z'], atmParams['h2o'], atmParams['aot'], atmParams['doy'], KM)
         elliptical_orbit_correction = 0.03275104*math.cos(atmParams[4]/59.66638337) + 0.96804905
         a *= elliptical_orbit_correction
         b *= elliptical_orbit_correction
@@ -91,9 +92,9 @@ def toa_to_rad_multiplier(bandname: str, imageInfo: dict, atmParams: dict) -> fl
     """
     ESUN = imageInfo['SOLAR_IRRADIANCE_'+bandname]
     # solar exoatmospheric spectral irradiance
-    solar_angle_correction = math.cos(math.radians(atmParams[0]))
+    solar_angle_correction = math.cos(math.radians(atmParams['solar_z']))
     # Earth-Sun distance (from day of year)
-    d = 1 - 0.01672 * math.cos(0.9856 * (atmParams[4]-4))
+    d = 1 - 0.01672 * math.cos(0.9856 * (atmParams['doy']-4))
     # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
     # conversion factor
     multiplier = ESUN*solar_angle_correction/(math.pi*d**2)
