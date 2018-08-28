@@ -51,7 +51,6 @@ def atm_corr_image(imageInfo: dict) -> dict:
     scene_date = datetime.datetime.utcfromtimestamp(imageInfo['system:time_start']/1000)
     dt1 = ee.Date(str(scene_date).rsplit(sep=' ')[0])
 
-    # day of year
     atmParams['doy'] = scene_date.timetuple().tm_yday
     atmParams['solar_z'] = imageInfo['MEAN_SOLAR_ZENITH_ANGLE']
     atmParams['h2o'] = Atmospheric.water(geom, dt1).getInfo()
@@ -76,8 +75,8 @@ def get_corr_coef(imageInfo: dict, atmParams: dict) -> list:
         filepath = DIRPATH + 'S2A_MSI_' + band + '.ilut'
         with open(filepath, 'rb') as ilut_file:
             iluTable = pickle.load(ilut_file)
-        a, b = iluTable(atmParams['solar_z'], atmParams['h2o'], atmParams['aot'], atmParams['doy'], KM)
-        elliptical_orbit_correction = 0.03275104*math.cos(atmParams[4]/59.66638337) + 0.96804905
+        a, b = iluTable(atmParams['solar_z'], atmParams['h2o'], atmParams['o3'], atmParams['aot'], KM)
+        elliptical_orbit_correction = 0.03275104*math.cos(atmParams['doy']/59.66638337) + 0.96804905
         a *= elliptical_orbit_correction
         b *= elliptical_orbit_correction
         corr_coefs.append([a, b])
@@ -126,7 +125,7 @@ def atm_corr_band(image, imageInfo: dict, atmParams: dict):
 
 
 S3 = S2List
-SrList = ee.List([0])
+SrList = ee.List([0]) # Can't init empty list so need a garbage element
 export_list = []
 coeff_list = []
 for i in range(NO_OF_IMAGES):
@@ -135,17 +134,18 @@ for i in range(NO_OF_IMAGES):
     atmVars = atm_corr_image(iInfoProps)
     corrCoeffs = get_corr_coef(iInfoProps, atmVars)
     coeff_list.append(corrCoeffs)
-    img = atm_corr_band(ee.Image(S2List.get(i)), iInfoProps, atmVars)
-#    export = ee.batch.Export.image.toDrive(
-#            image=img,
-#            fileNamePrefix='sen2_' + str(i),
-#            description='py',
-#            scale = 10,
-#            folder = "gee_img",
-#            maxPixels = 1e13
-#            )
-#    export_list.append(export)
-    SrList = SrList.add(img)
-
-for task in export_list:
-    task.start()
+    # Uncomment the rest as you please to get an ee.List with the images or even export them to EE.
+    # img = atm_corr_band(ee.Image(S2List.get(i)), iInfoProps, atmVars)
+    # export = ee.batch.Export.image.toDrive(
+    #         image=img,
+    #         fileNamePrefix='sen2_' + str(i),
+    #         description='py',
+    #         scale = 10,
+    #         folder = "gee_img",
+    #         maxPixels = 1e13
+    #         )
+    # export_list.append(export)
+    # SrList = SrList.add(img)
+# SrList = SrList.slice(1) # Need to remove the first element from the list which is garbage
+# for task in export_list:
+#     task.start()
