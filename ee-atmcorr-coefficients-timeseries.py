@@ -5,6 +5,7 @@
 
 # standard modules
 import ee
+from pprint import pprint
 import datetime
 import math
 import pickle
@@ -146,6 +147,9 @@ for i in range(NO_OF_IMAGES):
     #         )
     # export_list.append(export)
     # SrList = SrList.add(img)
+
 # SrList = SrList.slice(1) # Need to remove the first element from the list which is garbage
 # for task in export_list:
 #     task.start()
+with open('coeff_list.txt') as f:
+    pprint(coeff_list, stream=f)
