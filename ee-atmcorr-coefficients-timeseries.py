@@ -8,12 +8,11 @@ import ee
 import datetime
 import math
 import pickle
-
-
+ee.Initialize()
+# package modules
 from atmcorr.atmospheric import Atmospheric
 from atmcorr.timeSeries import timeSeries
 
-ee.Initialize()
 
 # AOI and type
 target = 'forest'
