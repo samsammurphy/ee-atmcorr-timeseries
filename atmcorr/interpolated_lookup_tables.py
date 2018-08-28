@@ -16,7 +16,7 @@ import zipfile
 import time
 from itertools import product
 from scipy.interpolate import LinearNDInterpolator
-import mission_specifics
+import atmcorr.mission_specifics as mission_s
 
 class handler:
   """
@@ -34,7 +34,7 @@ class handler:
     self.bin_path = os.path.dirname(os.path.abspath(__file__))
     self.base_path = os.path.dirname(self.bin_path)
     self.files_path = os.path.join(self.base_path,'files')
-    self.py6S_sensor = mission_specifics.py6S_sensor(self.mission)
+    self.py6S_sensor = mission_s.py6S_sensor(self.mission)
     self.LUT_path = os.path.join(self.files_path,'LUTs',self.py6S_sensor,\
         'Continental','view_zenith_0')
     self.iLUT_path = os.path.join(self.files_path,'iLUTs',self.py6S_sensor,\

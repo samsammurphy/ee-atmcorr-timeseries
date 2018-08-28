@@ -1,11 +1,11 @@
 import os
 import ee
 import pandas as pd
-import interpolated_lookup_tables as iLUT
-from ee_requests import request_meanRadiance
-from atmcorr_timeseries import surface_reflectance_timeseries
-from mission_specifics import ee_bandnames
-from mission_specifics import common_bandnames
+
+import atmcorr.interpolated_lookup_tables as iLUT
+from atmcorr.ee_requests import request_meanRadiance
+from atmcorr.atmcorr_timeseries import surface_reflectance_timeseries
+from atmcorr.mission_specifics import ee_bandnames, common_bandnames
 
 def timeseries_extrator(geom, startDate, stopDate, mission, removeClouds=True):
     """
