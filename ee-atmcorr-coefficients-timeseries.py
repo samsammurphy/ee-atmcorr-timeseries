@@ -21,7 +21,7 @@ geom = ee.Geometry.Rectangle(85.5268682942167402, 25.6240533612814261,
 # satellite missions, 
 MISSIONS = ['Sentinel2']
 # Change this to location of iLUTs
-DIRPATH = 'C:/Users/preet/Desktop/sentinel/ee-atmcorr-timeseries/files/iLUTs/S2A_MSI/Continental/view_zenith_0/'
+DIRPATH = './files/iLUTs/S2A_MSI/Continental/view_zenith_0/'
 # start and end of time series
 START_DATE = '2016-11-19'  # YYYY-MM-DD
 STOP_DATE = '2017-02-17'  # YYYY-MM-DD
