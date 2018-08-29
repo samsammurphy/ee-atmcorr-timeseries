@@ -12,9 +12,9 @@ Returns a feature collection which could be input into, for exampled:
 """
 
 import ee
-from atmospheric import Atmospheric
-from cloudRemover import CloudRemover
-import mission_specifics
+from atmcorr.atmospheric import Atmospheric
+from atmcorr.cloudRemover import CloudRemover
+import atmcorr.mission_specifics as mission_s
 
 class AtmcorrInput:
   """
@@ -32,7 +32,7 @@ class AtmcorrInput:
         )
 
     return ee.Dictionary({
-      'solar_z':mission_specifics.solar_z(TimeSeries.image, TimeSeries.mission),
+      'solar_z':mission_s.solar_z(TimeSeries.image, TimeSeries.mission),
       'h2o':Atmospheric.water(TimeSeries.geom,TimeSeries.date),
       'o3':Atmospheric.ozone(TimeSeries.geom,TimeSeries.date),
       'aot':Atmospheric.aerosol(TimeSeries.geom,TimeSeries.date),
@@ -65,16 +65,16 @@ class TimeSeries:
     """
 
     # top of atmosphere reflectance
-    toa = mission_specifics.TOA(TimeSeries.image, TimeSeries.mission)
+    toa = mission_s.TOA(TimeSeries.image, TimeSeries.mission)
 
     # solar irradiances
-    ESUNs = mission_specifics.ESUNs(TimeSeries.image, TimeSeries.mission)
+    ESUNs = mission_s.ESUNs(TimeSeries.image, TimeSeries.mission)
 
     # wavebands
-    bands = mission_specifics.ee_bandnames(TimeSeries.mission)
+    bands = mission_s.ee_bandnames(TimeSeries.mission)
 
     # solar zenith (radians)
-    theta = mission_specifics.solar_z(TimeSeries.image, TimeSeries.mission).multiply(0.017453293)
+    theta = mission_s.solar_z(TimeSeries.image, TimeSeries.mission).multiply(0.017453293)
 
     # circular math
     pi = ee.Number(3.14159265359)
@@ -141,9 +141,9 @@ def request_meanRadiance(geom, startDate, stopDate, mission, removeClouds):
   TimeSeries.cloudRemover = CloudRemover  
 
   # Earth Engine image collection
-  ic = ee.ImageCollection(mission_specifics.eeCollection(mission))\
+  ic = ee.ImageCollection(mission_s.eeCollection(mission))\
     .filterBounds(geom)\
     .filterDate(startDate, stopDate)\
-    .filter(mission_specifics.sunAngleFilter(mission))
+    .filter(mission_s.sunAngleFilter(mission))
 
   return ic.map(TimeSeries.extractor).sort('timestamp')
