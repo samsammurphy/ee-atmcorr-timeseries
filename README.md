@@ -1,3 +1,12 @@
+____
+# !
+## This repo is no longer under development
+and is probably broken given the pace of the Google Earth Engine team. I am now the CEO of [Earthscope](https://earthscope.io), a startup company from [Entrepreneur First](https://joinef.com), so have no time to squash any bugs that I introduced (sorry) or that have since appeared... 
+
+The rest of the repo is 'as was', use at your own peril.
+____
+
+
 ## Atmospheric Correction of Sentinel2 and Landsat
 
 Consider using [gee-atmcorr-S2](https://github.com/samsammurphy/gee-atmcorr-S2) if you are atmospherically correcting a small number of images (e.g. 10s). It uses [Py6S](http://py6s.readthedocs.io/en/latest/) directly and has less set up time. 
