@@ -9,7 +9,7 @@ correction)
 """
 
 import math
-import mission_specifics
+import atmcorr.mission_specifics as mission_s
 
 def atmcorr(radiance, perihelion, day_of_year):
   """
@@ -42,8 +42,8 @@ def surface_reflectance_timeseries(meanRadiance, iLUTs, mission):
   feature_collection = meanRadiance['features']
   
   # band names 
-  ee_bandnames = mission_specifics.ee_bandnames(mission)
-  py6s_bandnames = mission_specifics.py6s_bandnames(mission)
+  ee_bandnames = mission_s.ee_bandnames(mission)
+  py6s_bandnames = mission_s.py6s_bandnames(mission)
 
   # time series output variable
   timeSeries = {'timeStamp':[], 'mission':mission}
