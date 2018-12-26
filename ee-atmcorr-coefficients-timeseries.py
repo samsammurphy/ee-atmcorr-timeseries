@@ -151,5 +151,5 @@ for i in range(NO_OF_IMAGES):
 # SrList = SrList.slice(1) # Need to remove the first element from the list which is garbage
 # for task in export_list:
 #     task.start()
-with open('coeff_list.txt') as f:
+with open('coeff_list.txt', 'w') as f:
     pprint(coeff_list, stream=f)
